@@ -7,8 +7,6 @@ RecordingStudioGoogleDrive.configure do |config|
   config.token_url = "/fake_oauth/token"
   config.revoke_url = "/fake_oauth/revoke"
   config.client_id = FakeOauth::CLIENT_ID
-  config.client_secret = Rails.application.credentials.dig(
-    :recording_studio_oauth, :outbound, :google_drive, :client_secret
-  )
+  config.client_secret = FakeOauth::CLIENT_SECRET
   config.http = FakeOauth
 end
