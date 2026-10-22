@@ -2,10 +2,10 @@
 
 ## Architecture
 
-- This repository is a Rails mountable engine template for building Recording Studio addons.
-- Preserve engine namespace isolation under `GemTemplate` unless the task is explicitly about renaming the gem.
-- Treat `docs/gem_template/` as architectural reference material. For current addon workflow, prefer the top-level README and the dummy app.
-- Keep changes small and scoped. Do not rewrite template surfaces unless the request requires it.
+- This repository is the Recording Studio Google Drive Rails engine.
+- Preserve engine namespace isolation under `RecordingStudioGoogleDrive`.
+- Prefer the top-level README and the dummy app for current addon workflow.
+- Keep changes small and scoped.
 
 ## UI Conventions
 

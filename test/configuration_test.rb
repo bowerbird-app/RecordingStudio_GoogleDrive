@@ -4,22 +4,20 @@ require "test_helper"
 
 class ConfigurationTest < Minitest::Test
   def setup
-    @configuration = GemTemplate::Configuration.new
+    @configuration = RecordingStudioGoogleDrive::Configuration.new
   end
 
   def test_merge_updates_known_attributes
-    @configuration.merge!(api_key: "abc123", timeout: 9, enable_feature_x: true)
+    @configuration.merge!(page_size: 40)
 
-    assert_equal "abc123", @configuration.api_key
-    assert_equal 9, @configuration.timeout
-    assert_equal true, @configuration.enable_feature_x
+    assert_equal 40, @configuration.page_size
   end
 
   def test_merge_ignores_unknown_keys
-    @configuration.merge!(unknown_key: "ignored", timeout: 7)
+    @configuration.merge!(unknown_key: "ignored", page_size: 7)
 
     refute_respond_to @configuration, :unknown_key
-    assert_equal 7, @configuration.timeout
+    assert_equal 7, @configuration.page_size
   end
 
   def test_merge_with_non_enumerable_is_noop
@@ -27,47 +25,29 @@ class ConfigurationTest < Minitest::Test
 
     @configuration.merge!(nil)
 
-    assert_nil @configuration.api_key if original[:api_key].nil?
-    assert_equal original[:api_key], @configuration.api_key unless original[:api_key].nil?
-    assert_equal original[:timeout], @configuration.timeout
-    assert_equal original[:enable_feature_x], @configuration.enable_feature_x
+    assert_equal original, @configuration.to_h
   end
 
-  def test_initialize_uses_environment_api_key_and_defaults
-    previous_value = ENV.fetch("GEM_TEMPLATE_API_KEY", nil)
-    ENV["GEM_TEMPLATE_API_KEY"] = "env-token"
-
-    configuration = GemTemplate::Configuration.new
-
-    assert_equal "env-token", configuration.api_key
-    assert_equal false, configuration.enable_feature_x
-    assert_equal 5, configuration.timeout
-    assert_instance_of RecordingStudio::Hooks, configuration.hooks
-  ensure
-    ENV["GEM_TEMPLATE_API_KEY"] = previous_value
+  def test_initialize_defaults_page_size
+    assert_equal 25, @configuration.page_size
+    assert_instance_of RecordingStudio::Hooks, @configuration.hooks
   end
 
   def test_merge_accepts_string_keys
-    @configuration.merge!("api_key" => "string-key", "timeout" => 12)
+    @configuration.merge!("page_size" => 12)
 
-    assert_equal "string-key", @configuration.api_key
-    assert_equal 12, @configuration.timeout
-  end
-
-  def test_to_h_reports_registered_hook_counts
-    @configuration.hooks.before_initialize { nil }
-    @configuration.hooks.before_initialize { nil }
-    @configuration.hooks.after_service { nil }
-
-    result = @configuration.to_h
-
-    assert_equal 2, result.fetch(:hooks_registered).fetch(:before_initialize)
-    assert_equal 1, result.fetch(:hooks_registered).fetch(:after_service)
+    assert_equal 12, @configuration.page_size
   end
 
   def test_configure_without_block_is_safe
-    GemTemplate.configure
+    RecordingStudioGoogleDrive.configure
 
-    assert_kind_of GemTemplate::Configuration, GemTemplate.configuration
+    assert_kind_of RecordingStudioGoogleDrive::Configuration, RecordingStudioGoogleDrive.configuration
+  end
+
+  def test_template_knobs_are_gone
+    refute_respond_to @configuration, :api_key
+    refute_respond_to @configuration, :enable_feature_x
+    refute_respond_to @configuration, :timeout
   end
 end
