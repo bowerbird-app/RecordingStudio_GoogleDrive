@@ -3,14 +3,18 @@
 <div class="flex w-full flex-col gap-6">
   <%= render FlatPack::PageTitle::Component.new(
     title: "Config",
-    subtitle: "Replace this placeholder with the configuration settings your generated gem exposes.",
+    subtitle: "Name the credential keys. Keep the values in the secret store.",
     variant: :h1
   ) %>
 
   <%= render FlatPack::CodeBlock::Component.new(
-    language: :ruby,
+    language: :yaml,
     code: <<~'CODE'
-      # Add the config settings for the gem here.
+      recording_studio_oauth:
+        outbound:
+          google_drive:
+            client_id:
+            client_secret:
     CODE
   ) %>
 </div>

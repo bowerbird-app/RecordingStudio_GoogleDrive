@@ -25,19 +25,19 @@ class DocsControllerTest < ActionDispatch::IntegrationTest
     get docs_install_path
     assert_response :success
     assert_select "h1", text: "Install"
-    assert_includes response.body, "Step 1"
-    assert_includes response.body, "Provide one section title for each step"
-    assert_includes response.body, "# Put the step instruction here."
+    assert_includes response.body, "Add the gems"
+    assert_includes response.body, "recording_studio_oauth"
+    assert_includes response.body, "v0.14.1"
   end
 
   test "config page renders successfully" do
     get docs_config_path
     assert_response :success
     assert_select "h1", text: "Config"
-    expected_placeholder = "Replace this placeholder with the configuration settings your generated gem exposes."
-
-    assert_includes response.body, expected_placeholder
-    assert_includes response.body, "# Add the config settings for the gem here."
+    assert_includes response.body, "recording_studio_oauth"
+    assert_includes response.body, "google_drive"
+    assert_includes response.body, "client_id"
+    assert_includes response.body, "client_secret"
   end
 
   test "authenticated docs pages use the recording studio default layout" do

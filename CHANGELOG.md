@@ -4,6 +4,23 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.0] - 2026-10-22
+
+### Added
+- Depends on `recording_studio_oauth` `>= 0.14.1, < 1.0`. Dummy and the gem Gemfile pin git tag `v0.14.1`.
+- Registers `:google_drive` with Oauth's outbound provider registry (authorize, token, revoke, Drive scopes, PKCE, refresh).
+- `Client.for(root:, actor:)` and `TokenStore` resolve a live access token through `RecordingStudioOauth.connection_for`. Oauth refreshes expired tokens. Missing, revoked, or failed refresh raises `ReconnectRequired`.
+- Dummy Connect, Disconnect, and Reconnect for Google Drive through Oauth's outbound flow, using a local fake provider.
+
+### Changed
+- Tokens come from Oauth outbound connections. The client still accepts a test `token_provider` so the suite makes no network calls.
+
+### Upgrade notes
+- Add Oauth `>= 0.14.1, < 1.0` and run its install plus migrations.
+- Set `credentials.recording_studio_oauth.outbound.google_drive.client_id` and `client_secret` in the host secret store. Do not commit the values.
+- Build clients with `Client.for(root:, actor:)` (or `Client.new(root:, actor:)`). A callable `token_provider` remains valid for tests.
+- No connection, or a refresh that Oauth cannot complete, raises `ReconnectRequired`. Ask the person to Connect again.
+
 ## [0.1.0] - 2026-10-22
 
 ### Added
@@ -21,4 +38,5 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - This is the first release of `recording_studio_google_drive`. Add the gem, then build a client with a token provider. Do not add Oauth as a dependency until that gem is released.
 - Call `search` with `query:` (not a positional argument). HTTP 401, `invalid_grant`, and `invalid_token` still raise `ReconnectRequired`. `unauthorized_client` raises `RequestError`.
 
+[0.2.0]: https://github.com/bowerbird-app/RecordingStudio_GoogleDrive/releases/tag/v0.2.0
 [0.1.0]: https://github.com/bowerbird-app/RecordingStudio_GoogleDrive/releases/tag/v0.1.0

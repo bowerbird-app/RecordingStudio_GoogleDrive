@@ -1,29 +1,43 @@
-<% dummy_page_nav(title: "Google Drive client", back_url: root_path) %>
+<% dummy_page_nav(title: "Google Drive", back_url: root_path) %>
 
 <div class="flex w-full flex-col gap-6">
   <%= render FlatPack::PageTitle::Component.new(
-    title: "Google Drive client",
-    subtitle: "This dummy app boots Recording Studio so the Google Drive gem can load.",
+    title: "Google Drive",
+    subtitle: "Connect once. This dummy talks to a fake Drive, not Google.",
     variant: :h1
   ) %>
 
-  <div class="grid gap-6 lg:grid-cols-2">
-    <%= render FlatPack::Card::Component.new(style: :default) do |card| %>
-      <% card.header do %>
-        <%= render FlatPack::PageTitle::Component.new(
-          title: "What this host proves",
-          subtitle: "Engine mount, dummy login, and Recording Studio layout.",
-          variant: :h3,
-          class: "mb-0 pb-0"
-        ) %>
-      <% end %>
-
-      <% card.body do %>
-        <ul class="space-y-3 text-sm leading-6">
-          <li>The Google Drive client is a library. Drive HTTP calls are covered in the gem suite.</li>
-          <li>This app is the host that boots the engine with Recording Studio and FlatPack.</li>
-        </ul>
-      <% end %>
+  <%= render FlatPack::Card::Component.new(style: :default) do |card| %>
+    <% card.header do %>
+      <%= render FlatPack::PageTitle::Component.new(
+        title: drive_status_title,
+        subtitle: drive_status_subtitle,
+        variant: :h3,
+        class: "mb-0 pb-0"
+      ) %>
     <% end %>
-  </div>
+    <% card.footer do %>
+      <div class="flex flex-wrap gap-3">
+        <% if @drive_connection.nil? %>
+          <%= form_with url: recording_studio_oauth.outbound_connect_path(provider: drive_provider_key), method: :post do %>
+            <%= hidden_field_tag :owner, "user" %>
+            <%= hidden_field_tag :return_to, root_path %>
+            <%= render FlatPack::Button::Component.new(text: "Connect Google Drive", style: :primary, size: :md, type: "submit") %>
+          <% end %>
+        <% else %>
+          <% if @drive_connection.needs_reconnect? || !@drive_ready %>
+            <%= form_with url: recording_studio_oauth.outbound_connect_path(provider: drive_provider_key), method: :post do %>
+              <%= hidden_field_tag :owner, "user" %>
+              <%= hidden_field_tag :return_to, root_path %>
+              <%= render FlatPack::Button::Component.new(text: "Reconnect", style: :danger, size: :md, type: "submit") %>
+            <% end %>
+          <% end %>
+          <%= form_with url: recording_studio_oauth.outbound_connection_path(@drive_connection), method: :delete do %>
+            <%= hidden_field_tag :return_to, root_path %>
+            <%= render FlatPack::Button::Component.new(text: "Disconnect", style: :secondary, size: :md, type: "submit") %>
+          <% end %>
+        <% end %>
+      </div>
+    <% end %>
+  <% end %>
 </div>

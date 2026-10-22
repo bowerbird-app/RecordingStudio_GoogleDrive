@@ -43,8 +43,8 @@ class InstallGeneratorTest < Minitest::Test
   def test_install_guide_describes_library_setup
     install_guide = File.read(INSTALL_TEMPLATE_PATH)
 
-    assert_includes install_guide, "token provider"
-    assert_includes install_guide, "library"
+    assert_includes install_guide, "Client.for"
+    assert_includes install_guide, "client_id"
     refute_includes install_guide, "tailwindcss:build"
     refute_includes install_guide, "Addon Template"
     refute File.exist?(

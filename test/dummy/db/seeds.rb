@@ -15,31 +15,57 @@ find_or_record_child = lambda do |recordable, root_recording, parent_recording|
   ).recording
 end
 
-# Create the admin user
+grant_or_find_access = lambda do |recording, actor, role|
+  existing = RecordingStudioAccessible.access_recordings_for_actor(
+    recording: recording,
+    actor: actor
+  ).first
+  return existing if existing.present?
+
+  result = RecordingStudioAccessible.grant_access(
+    recording: recording,
+    actor: actor,
+    role: role,
+    manager_actor: actor
+  )
+  return result.value if result.success?
+
+  bootstrap = RecordingStudioAccessible.bootstrap_owner_access!(
+    recording: recording,
+    actor: actor
+  )
+  raise bootstrap.error if bootstrap.failure?
+
+  bootstrap.value
+end
+
 user = User.find_or_create_by!(email: "admin@admin.com") do |u|
   u.password = "Password"
   u.password_confirmation = "Password"
 end
 
-# Create the workspace recordables
 workspace = Workspace.find_or_create_by!(name: "Studio Workspace")
 accessible_workspace = Workspace.find_or_create_by!(name: "Client Workspace")
 private_workspace = Workspace.find_or_create_by!(name: "Private Workspace")
 folder = Folder.find_or_create_by!(name: "Product Docs")
 page = Page.find_or_create_by!(title: "Getting Started")
+admin_root = AdminRoot.find_or_create_by!(name: "Admin")
 
 previous_actor = Current.actor
 Current.actor = user
 
 begin
-  # Create the root recording
   root_recording = RecordingStudio.root_recording_for(workspace)
   accessible_root_recording = RecordingStudio.root_recording_for(accessible_workspace)
   private_root_recording = RecordingStudio.root_recording_for(private_workspace)
+  admin_recording = RecordingStudio.root_recording_for(admin_root)
 
   folder_recording = find_or_record_child.call(folder, root_recording, root_recording)
-
   find_or_record_child.call(page, root_recording, folder_recording)
+
+  grant_or_find_access.call(root_recording, user, :admin)
+  grant_or_find_access.call(accessible_root_recording, user, :admin)
+  grant_or_find_access.call(admin_recording, user, :admin)
 ensure
   Current.actor = previous_actor
 end
@@ -49,3 +75,4 @@ puts "Seeded: Workspace '#{workspace.name}' with root recording ##{root_recordin
 puts "Seeded: Workspace '#{accessible_workspace.name}' with root recording ##{accessible_root_recording.id}"
 puts "Seeded: Workspace '#{private_workspace.name}' with root recording ##{private_root_recording.id}"
 puts "Seeded: Folder '#{folder.name}' and page '#{page.title}'"
+puts "Seeded: Admin root for staff screens"

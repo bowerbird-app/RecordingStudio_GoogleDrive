@@ -1,13 +1,18 @@
 # frozen_string_literal: true
 
 require "erb"
+require "recording_studio_google_drive/token_store"
 
 module RecordingStudioGoogleDrive
   class Client
     FILE_FIELDS = "id,name,mimeType,resourceKey,webViewLink,size,modifiedTime"
 
-    def initialize(token_provider:, page_size: nil)
-      @access_token = AccessToken.new(token_provider)
+    def self.for(root:, actor:, page_size: nil)
+      new(token_provider: TokenStore.new(root: root, actor: actor), page_size: page_size)
+    end
+
+    def initialize(token_provider: nil, root: nil, actor: nil, page_size: nil)
+      @access_token = AccessToken.new(resolve_token_provider(token_provider, root, actor))
       @page_size = page_size
       @http = Http.new(access_token: @access_token)
     end
@@ -68,6 +73,13 @@ module RecordingStudioGoogleDrive
     private
 
     attr_reader :http
+
+    def resolve_token_provider(token_provider, root, actor)
+      return token_provider unless token_provider.nil?
+      return TokenStore.new(root: root, actor: actor) if root && actor
+
+      raise ArgumentError, "token_provider or root and actor are required"
+    end
 
     def resolved_page_size(page_size)
       page_size || @page_size || RecordingStudioGoogleDrive.configuration.page_size

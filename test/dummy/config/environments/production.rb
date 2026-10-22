@@ -86,4 +86,8 @@ Rails.application.configure do
   #
   # Skip DNS rebinding protection for the default health check endpoint.
   # config.host_authorization = { exclude: ->(request) { request.path == "/up" } }
+
+  config.active_record.encryption.primary_key = "dummyPrimaryKeyForTestsxxxxxxxx"
+  config.active_record.encryption.deterministic_key = "dummyDeterministicKeyForTestsxx"
+  config.active_record.encryption.key_derivation_salt = "dummyKeyDerivationSaltForTestsx"
 end

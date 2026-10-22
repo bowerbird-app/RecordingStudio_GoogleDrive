@@ -11,6 +11,7 @@
 */
 @source "../../../vendor/engines/flat_pack/app/components";
 @source "../../../vendor/engines/recording_studio/app/views";
+@source "../../../vendor/engines/recording_studio_oauth/app/views";
 
 /* Include the engine's views in the Tailwind build */
 @source "../../../../../app/views/**/*.erb";
