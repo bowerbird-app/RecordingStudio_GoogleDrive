@@ -151,9 +151,8 @@ class ClientTest < Minitest::Test
     assert_equal "Preview.png", downloaded.filename
     assert_equal "image/png", downloaded.content_type
     assert_equal "image-bytes", downloaded.body
-    assert_requested(:get, "https://www.googleapis.com/drive/v3/files/file-1") do |request|
-      request.headers["Authorization"] == "Bearer access-token" &&
-        query_params(request.uri)["alt"] == "media"
+    assert_requested(:get, %r{https://www.googleapis.com/drive/v3/files/file-1\?.*alt=media}) do |request|
+      request.headers["Authorization"] == "Bearer access-token"
     end
     assert_requested(:get, "https://lh3.googleusercontent.com/download/abc") do |request|
       request.headers["Authorization"].nil?

@@ -66,8 +66,8 @@ module RecordingStudioGoogleDrive
           read_timeout: READ_TIMEOUT,
           write_timeout: WRITE_TIMEOUT
         ) { |http| http.request(request) }
-      rescue *NETWORK_ERRORS => error
-        raise RequestError, "Google Drive request failed (#{error.class})"
+      rescue *NETWORK_ERRORS => e
+        raise RequestError, "Google Drive request failed (#{e.class})"
       end
 
       def follow_redirect(uri, response, follow_cross_host:, redirects_remaining:)
@@ -76,14 +76,18 @@ module RecordingStudioGoogleDrive
 
         redirected = URI.join(uri.to_s, location)
         refuse_cross_host_json_redirect!(uri, redirected, follow_cross_host)
-        next_request = Net::HTTP::Get.new(redirected)
-        next_request["Authorization"] = bearer if json_host?(redirected.host)
         start_request(
           redirected,
-          next_request,
+          redirect_get(redirected),
           follow_cross_host: follow_cross_host,
           redirects_remaining: redirects_remaining - 1
         )
+      end
+
+      def redirect_get(uri)
+        request = Net::HTTP::Get.new(uri)
+        request["Authorization"] = bearer if json_host?(uri.host)
+        request
       end
 
       def refuse_cross_host_json_redirect!(uri, redirected, follow_cross_host)

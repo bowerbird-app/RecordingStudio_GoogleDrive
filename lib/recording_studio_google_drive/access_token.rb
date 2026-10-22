@@ -12,9 +12,7 @@ module RecordingStudioGoogleDrive
 
     def to_s
       value = read
-      if value.nil? || value.to_s.strip.empty?
-        raise ReconnectRequired, "Google Drive access token is missing"
-      end
+      raise ReconnectRequired, "Google Drive access token is missing" if value.nil? || value.to_s.strip.empty?
 
       value.to_s
     end

@@ -30,6 +30,18 @@ module RecordingStudioGoogleDrive
     def post_multipart(path, params:, metadata:, body:, content_type:)
       boundary = "rs_google_drive_#{SecureRandom.hex(16)}"
       uri = uri_for(UPLOAD_ROOT, path, params.merge(uploadType: "multipart"))
+      response = @transport.post(
+        uri,
+        upload_request(uri, boundary, metadata, body, content_type),
+        follow_cross_host: false
+      )
+      raise_unless_success(response)
+      parse_json_object(response.body)
+    end
+
+    private
+
+    def upload_request(uri, boundary, metadata, body, content_type)
       request = Net::HTTP::Post.new(uri)
       request["Authorization"] = "Bearer #{@access_token}"
       request["Content-Type"] = "multipart/related; boundary=#{boundary}"
@@ -39,12 +51,8 @@ module RecordingStudioGoogleDrive
         body: body,
         content_type: content_type
       )
-      response = @transport.post(uri, request, follow_cross_host: false)
-      raise_unless_success(response)
-      parse_json_object(response.body)
+      request
     end
-
-    private
 
     def uri_for(root, path, params)
       uri = URI.join("#{root}/", path.to_s.sub(%r{\A/+}, ""))

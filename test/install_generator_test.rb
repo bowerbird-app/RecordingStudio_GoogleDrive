@@ -46,6 +46,6 @@ class InstallGeneratorTest < Minitest::Test
     assert_includes install_guide, "token provider"
     assert_includes install_guide, "library"
     refute_includes install_guide, "tailwindcss:build"
-    refute_includes install_guide, "mount"
+    refute_includes install_guide, "Addon Template"
   end
 end

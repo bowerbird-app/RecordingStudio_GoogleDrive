@@ -12,7 +12,7 @@ module RecordingStudioGoogleDrive
     end
 
     def escape(value)
-      value.to_s.gsub("\\", "\\\\").gsub("'", "\\'")
+      value.to_s.gsub("\\") { "\\\\" }.gsub("'") { "\\'" }
     end
 
     def present?(value)

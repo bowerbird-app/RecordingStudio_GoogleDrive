@@ -22,7 +22,7 @@ class ContractTest < Minitest::Test
   end
 
   def test_access_token_new_provider_and_to_s
-    assert_equal [[:req, :provider]], MODULE::AccessToken.instance_method(:initialize).parameters
+    assert_equal [%i[req provider]], MODULE::AccessToken.instance_method(:initialize).parameters
     assert MODULE::AccessToken.method_defined?(:to_s)
 
     token = MODULE::AccessToken.new(-> { "ya29.live" })
@@ -43,7 +43,7 @@ class ContractTest < Minitest::Test
   end
 
   def test_blank_or_nil_token_requires_reconnect
-    assert_raises(MODULE::ReconnectRequired) { MODULE::AccessToken.new(-> { nil }).to_s }
+    assert_raises(MODULE::ReconnectRequired) { MODULE::AccessToken.new(-> {}).to_s }
     assert_raises(MODULE::ReconnectRequired) { MODULE::AccessToken.new(-> { "  " }).to_s }
   end
 
