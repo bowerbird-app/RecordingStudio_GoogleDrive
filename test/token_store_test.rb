@@ -32,7 +32,7 @@ class TokenStoreTest < Minitest::Test
     end
   end
 
-  def test_expired_then_refreshed
+  def test_ready_token_is_returned
     connection = FakeConnection.new("ya29.refreshed")
 
     with_connection(connection) do

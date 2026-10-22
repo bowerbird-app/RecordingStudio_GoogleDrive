@@ -11,6 +11,7 @@ class HomeController < ApplicationController
   def drive_connection
     return if current_user.nil?
 
+    # Dummy-only home status. This is not the Drive API.
     RecordingStudioOauth::OutboundConnection.live.for_provider(provider_key).find_by(owner_actor: current_user)
   end
 

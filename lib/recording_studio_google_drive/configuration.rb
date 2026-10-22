@@ -42,6 +42,19 @@ module RecordingStudioGoogleDrive
       end
     end
 
+    def inspect
+      "#<#{self.class.name} page_size=#{page_size.inspect} " \
+        "oauth_provider_key=#{oauth_provider_key.inspect} " \
+        "authorize_url=#{authorize_url.inspect} token_url=#{token_url.inspect} " \
+        "client_id=#{client_id.inspect} client_secret=[FILTERED]>"
+    end
+
+    alias to_s inspect
+
+    def pretty_print(printer)
+      printer.text inspect
+    end
+
     private
 
     def apply_client_defaults

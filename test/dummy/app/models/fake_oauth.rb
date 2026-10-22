@@ -1,5 +1,8 @@
 # frozen_string_literal: true
 
+require "base64"
+require "digest"
+
 class FakeOauth
   CLIENT_ID = "dummy-fake-drive"
   CLIENT_SECRET = "dummy-fake-drive-secret"
@@ -75,7 +78,8 @@ class FakeOauth
     end
 
     def verifier_matches?(verifier, challenge)
-      RecordingStudioOauth::Pkce.s256_matches?(verifier, challenge)
+      computed = Base64.urlsafe_encode64(Digest::SHA256.digest(verifier.to_s), padding: false)
+      computed == challenge.to_s
     end
 
     def store_code(code, payload, challenge)

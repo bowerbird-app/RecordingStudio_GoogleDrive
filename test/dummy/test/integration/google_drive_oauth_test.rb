@@ -109,13 +109,19 @@ class GoogleDriveOauthTest < ActionDispatch::IntegrationTest
   end
 
   test "google_drive provider is registered with fake local endpoints" do
-    provider = RecordingStudioOauth::Outbound.provider(:google_drive)
+    post recording_studio_oauth.outbound_connect_path(provider: "google_drive"), params: {
+      owner: "user",
+      return_to: "/"
+    }
+    assert_response :redirect
 
-    assert_equal "google_drive", provider.key
-    assert_equal "/fake_oauth/authorize", provider.authorize_url
-    assert_equal "/fake_oauth/token", provider.token_url
-    assert_equal "/fake_oauth/revoke", provider.revoke_url
-    assert_equal true, provider.refresh?
+    location = URI.parse(response.redirect_url)
+    query = Rack::Utils.parse_query(location.query)
+
+    assert_equal "/fake_oauth/authorize", location.path
+    assert_equal FakeOauth::CLIENT_ID, query["client_id"]
+    assert_equal "offline", query["access_type"]
+    assert_equal "consent", query["prompt"]
   end
 
   private
