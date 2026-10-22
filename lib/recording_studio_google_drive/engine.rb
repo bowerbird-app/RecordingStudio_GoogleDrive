@@ -10,21 +10,12 @@ module RecordingStudioGoogleDrive
     end
 
     initializer "recording_studio_google_drive.load_config" do |app|
-      if app.respond_to?(:config_for) && File.exist?(app.root.join("config/recording_studio_google_drive.yml"))
-        yaml = app.config_for(:recording_studio_google_drive)
-        RecordingStudioGoogleDrive.configuration.merge!(yaml) if yaml.respond_to?(:each)
+      if File.exist?(app.root.join("config/recording_studio_google_drive.yml"))
+        RecordingStudioGoogleDrive.configuration.merge!(app.config_for(:recording_studio_google_drive))
       end
 
-      if app.config.respond_to?(:x) && app.config.x.respond_to?(:recording_studio_google_drive)
-        xcfg = app.config.x.recording_studio_google_drive
-        if xcfg.respond_to?(:to_h)
-          RecordingStudioGoogleDrive.configuration.merge!(xcfg.to_h)
-        elsif xcfg.respond_to?(:each_pair)
-          hash = {}
-          xcfg.each_pair { |key, value| hash[key] = value }
-          RecordingStudioGoogleDrive.configuration.merge!(hash)
-        end
-      end
+      xcfg = app.config.x.recording_studio_google_drive
+      RecordingStudioGoogleDrive.configuration.merge!(xcfg) unless xcfg.nil?
 
       RecordingStudioGoogleDrive.configuration.hooks.run(
         :on_configuration,

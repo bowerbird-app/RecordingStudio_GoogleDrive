@@ -15,7 +15,7 @@ class RecordingStudioGoogleDriveTest < Minitest::Test
     gemspec = File.read(File.expand_path("../recording_studio_google_drive.gemspec", __dir__))
 
     assert_includes gemspec, 'spec.add_dependency "recording_studio", "~> 4.2"'
-    assert_includes gemspec, 'spec.required_ruby_version = ">= 3.3.12"'
+    assert_includes gemspec, 'spec.required_ruby_version = ">= 3.3.0"'
   end
 
   def test_gemspec_excludes_cursor_config
@@ -239,33 +239,10 @@ class RecordingStudioGoogleDriveTest < Minitest::Test
       refute_includes view_source, "FlatPack::Breadcrumb::Component"
     end
 
-    methods_view = File.read(File.expand_path("dummy/app/views/docs/methods.html.erb", __dir__))
-    assert_includes methods_view, "FlatPack::SectionTitle::Component"
-    assert_includes methods_view, "FlatPack::CodeBlock::Component"
-
-    gem_views_view = File.read(File.expand_path("dummy/app/views/docs/gem_views.html.erb", __dir__))
-    assert_includes gem_views_view, "FlatPack::Table::Component"
-    refute_includes gem_views_view, "FlatPack::List::Component"
-
-    recordable_types_view = File.read(File.expand_path("dummy/app/views/docs/recordable_types.html.erb", __dir__))
-    assert_includes recordable_types_view, "FlatPack::List::Component"
-    refute_includes recordable_types_view, "v3 parent/root"
-
-    recordings_tree_view = File.read(File.expand_path("dummy/app/views/docs/recordings_tree.html.erb", __dir__))
-    assert_includes recordings_tree_view, "FlatPack::Tree::Component"
-    refute_includes recordings_tree_view, "Current structure"
-    refute_includes recordings_tree_view, "This tree is generated from RecordingStudio::Recording records"
-  end
-
-  def test_dummy_recordings_tree_view_omits_structure_section_copy
-    recordings_tree_view = File.read(File.expand_path("dummy/app/views/docs/recordings_tree.html.erb", __dir__))
-
-    assert_includes recordings_tree_view, 'title: "Recordings tree"'
-    assert_includes recordings_tree_view, "FlatPack::Tree::Component"
-    recording_tree_partial = File.read(File.expand_path("dummy/app/views/docs/_recording_tree_node.html.erb", __dir__))
-    assert_includes recording_tree_partial, "parent_builder.node"
-    refute_includes recordings_tree_view, "Current structure"
-    refute_includes recordings_tree_view, "This tree is generated from RecordingStudio::Recording records"
+    %w[methods.html.erb gem_views.html.erb recordable_types.html.erb recordings_tree.html.erb].each do |view|
+      refute File.exist?(File.expand_path("dummy/app/views/docs/#{view}", __dir__))
+    end
+    refute File.exist?(File.expand_path("dummy/app/views/docs/_recording_tree_node.html.erb", __dir__))
   end
 
   def test_engine_does_not_ship_a_home_view
@@ -277,6 +254,11 @@ class RecordingStudioGoogleDriveTest < Minitest::Test
 
     refute File.exist?(view_path)
     refute File.exist?(controller_path)
+    refute File.exist?(
+      File.expand_path("../app/controllers/recording_studio_google_drive/application_controller.rb", __dir__)
+    )
+    refute File.exist?(File.expand_path("../app/views/recording_studio_google_drive/.keep", __dir__))
+    refute File.exist?(File.expand_path("../.github/instructions/views.instructions.md", __dir__))
   end
 
   def test_dummy_app_name_is_google_drive_demo

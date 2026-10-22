@@ -13,18 +13,19 @@ class ConfigurationTest < Minitest::Test
     assert_equal 40, @configuration.page_size
   end
 
-  def test_merge_ignores_unknown_keys
-    @configuration.merge!(unknown_key: "ignored", page_size: 7)
+  def test_merge_raises_on_unknown_keys
+    error = assert_raises(ArgumentError) { @configuration.merge!(unknown_key: "ignored", page_size: 7) }
 
-    refute_respond_to @configuration, :unknown_key
-    assert_equal 7, @configuration.page_size
+    assert_includes error.message, "unknown_key"
+    assert_equal 25, @configuration.page_size
   end
 
-  def test_merge_with_non_enumerable_is_noop
+  def test_merge_raises_on_non_hash
     original = @configuration.to_h
 
-    @configuration.merge!(nil)
+    error = assert_raises(ArgumentError) { @configuration.merge!(nil) }
 
+    assert_includes error.message, "hash"
     assert_equal original, @configuration.to_h
   end
 

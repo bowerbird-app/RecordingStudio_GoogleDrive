@@ -16,7 +16,7 @@ page.entries
 page.next_cursor
 page.more?
 
-page = client.search("brief", cursor: page.next_cursor)
+page = client.search(query: "brief", cursor: page.next_cursor)
 file = client.fetch_file("file-id")
 downloaded = client.download("file-id")
 uploaded = client.upload_file(
@@ -48,7 +48,7 @@ client = RecordingStudioGoogleDrive::Client.new(token_provider: connection)
 
 ## Errors
 
-`RecordingStudioGoogleDrive::Error` is the base. Expired, revoked, insufficient-scope, and `invalid_grant` tokens raise `ReconnectRequired`. Other Drive failures raise `RequestError`, which exposes `status` and `code`. The mapper uses HTTP status and Google's structured error code. It does not copy the response body into the message.
+`RecordingStudioGoogleDrive::Error` is the base. Expired, revoked, insufficient-scope, `invalid_token`, and `invalid_grant` tokens raise `ReconnectRequired`. `unauthorized_client` and other Drive failures raise `RequestError`, which exposes `status` and `code`. The mapper uses HTTP status and Google's structured error `status`. It does not copy the response body into the message.
 
 ## Configuration
 
@@ -66,7 +66,7 @@ A later phase registers this gem as an upload source. Another phase places it in
 
 ## Dummy app
 
-`test/dummy/` is a host that boots Recording Studio so the engine loads. Sign in at `/users/sign_in` with `admin@admin.com` / `Password`. Dummy credentials use the shared RecordingStudio development master key. Set `RAILS_MASTER_KEY` or `test/dummy/config/master.key`. Do not mint a new key.
+`test/dummy/` is a host that boots Recording Studio so the engine loads. Sign in at `/users/sign_in` with `admin@admin.com` / `Password`.
 
 ## Development
 

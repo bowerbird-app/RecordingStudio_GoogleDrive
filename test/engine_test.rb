@@ -59,7 +59,9 @@ class EngineTest < Minitest::Test
   end
 
   def test_load_config_is_noop_without_config_sources
-    app = Struct.new(:config, :root).new(Object.new, Pathname.new("/tmp/missing-google-drive-config"))
+    xcfg = Struct.new(:recording_studio_google_drive).new(nil)
+    app_config = Struct.new(:x).new(xcfg)
+    app = Struct.new(:config, :root).new(app_config, Pathname.new("/tmp/missing-google-drive-config"))
 
     find_initializer("recording_studio_google_drive.load_config").block.call(app)
 
@@ -72,6 +74,9 @@ class EngineTest < Minitest::Test
     refute_includes source, "class_eval"
     refute_includes source, "instance_variable_get"
     refute_includes source, "apply_model_extensions"
+    refute_includes source, "respond_to?"
+    refute_includes source, "each_pair"
+    refute_includes source, "to_h"
   end
 
   private

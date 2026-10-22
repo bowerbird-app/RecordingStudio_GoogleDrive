@@ -3,7 +3,8 @@
 module RecordingStudioGoogleDrive
   class AccessToken
     def initialize(provider)
-      unless provider.respond_to?(:call) || provider.respond_to?(:access_token)
+      callable = provider.respond_to?(:call) || provider.respond_to?(:access_token)
+      if provider.instance_of?(String) || !callable
         raise ArgumentError, "token provider must respond to call or access_token"
       end
 

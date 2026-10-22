@@ -8,7 +8,7 @@ module RecordingStudioGoogleDrive
 
     RECONNECT_REASONS = %w[authError invalidCredentials].freeze
     RECONNECT_STATUSES = %w[UNAUTHENTICATED ACCESS_TOKEN_SCOPE_INSUFFICIENT].freeze
-    RECONNECT_OAUTH_CODES = %w[invalid_token invalid_grant unauthorized_client].freeze
+    RECONNECT_OAUTH_CODES = %w[invalid_token invalid_grant].freeze
 
     def from_response(response, raw_body)
       body = parse_object(raw_body)
@@ -54,7 +54,7 @@ module RecordingStudioGoogleDrive
       return error if error.is_a?(String) && !error.empty?
 
       nested = nested_error(body)
-      first_text(nested["status"], nested["code"])
+      first_text(nested["status"])
     end
 
     def error_message(status, code)

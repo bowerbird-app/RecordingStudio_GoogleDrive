@@ -47,5 +47,8 @@ class InstallGeneratorTest < Minitest::Test
     assert_includes install_guide, "library"
     refute_includes install_guide, "tailwindcss:build"
     refute_includes install_guide, "Addon Template"
+    refute File.exist?(
+      File.expand_path("../lib/generators/recording_studio_google_drive/install/INSTALL.md", __dir__)
+    )
   end
 end

@@ -22,7 +22,7 @@ module RecordingStudioGoogleDrive
       )
     end
 
-    def search(query, cursor: nil, page_size: nil)
+    def search(query:, cursor: nil, page_size: nil)
       Listing.page(
         http,
         query: query,
@@ -96,7 +96,7 @@ module RecordingStudioGoogleDrive
       return io if io.instance_of?(String)
       return io.read if io.respond_to?(:read)
 
-      io.to_s
+      raise ArgumentError, "upload io must be a String or respond to read"
     end
   end
 end

@@ -17,11 +17,13 @@ module RecordingStudioGoogleDrive
     end
 
     def merge!(hash)
-      return unless hash.respond_to?(:each)
+      raise ArgumentError, "Google Drive configuration must be a hash" unless hash.is_a?(Hash)
 
       hash.each do |key, value|
         setter = "#{key}="
-        public_send(setter, value) if respond_to?(setter)
+        raise ArgumentError, "unknown Google Drive configuration key: #{key}" unless respond_to?(setter)
+
+        public_send(setter, value)
       end
     end
   end

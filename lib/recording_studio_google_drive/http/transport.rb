@@ -1,8 +1,6 @@
 # frozen_string_literal: true
 
 require "net/http"
-require "openssl"
-require "socket"
 require "timeout"
 require "uri"
 
@@ -14,14 +12,6 @@ module RecordingStudioGoogleDrive
       OPEN_TIMEOUT = 10
       READ_TIMEOUT = 30
       WRITE_TIMEOUT = 30
-      NETWORK_ERRORS = [
-        Timeout::Error,
-        SocketError,
-        Errno::ECONNRESET,
-        EOFError,
-        OpenSSL::SSL::SSLError,
-        Net::ProtocolError
-      ].freeze
 
       def initialize(access_token:)
         @access_token = access_token
@@ -45,6 +35,7 @@ module RecordingStudioGoogleDrive
         validate_request(uri, follow_cross_host: follow_cross_host, redirects_remaining: redirects_remaining)
         response = ssl_request(uri, request)
         return response unless response.is_a?(Net::HTTPRedirection)
+        raise RequestError, "Google Drive request refused a redirect" unless request.method == "GET"
 
         follow_redirect(uri, response, follow_cross_host: follow_cross_host, redirects_remaining: redirects_remaining)
       end
@@ -66,7 +57,7 @@ module RecordingStudioGoogleDrive
           read_timeout: READ_TIMEOUT,
           write_timeout: WRITE_TIMEOUT
         ) { |http| http.request(request) }
-      rescue *NETWORK_ERRORS => e
+      rescue Timeout::Error, SystemCallError, IOError => e
         raise RequestError, "Google Drive request failed (#{e.class})"
       end
 

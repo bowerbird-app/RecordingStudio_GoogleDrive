@@ -20,7 +20,7 @@ class ClientTest < Minitest::Test
   def test_search_escapes_backslashes_before_quotes
     requests = stub_list_page("files" => [])
 
-    client.search("foo\\bar'baz")
+    client.search(query: "foo\\bar'baz")
 
     q = query_params(requests.first.uri).fetch("q")
     assert_equal "trashed = false and name contains 'foo\\\\bar\\'baz'", q
@@ -30,7 +30,7 @@ class ClientTest < Minitest::Test
     requests = stub_list_page("files" => [])
     payload = "' or name contains 'secret"
 
-    client.search(payload)
+    client.search(query: payload)
 
     q = query_params(requests.first.uri).fetch("q")
     refute_includes q, "name contains '#{payload}'"
@@ -180,6 +180,48 @@ class ClientTest < Minitest::Test
     end
   end
 
+  def test_upload_reads_string_or_readable_io
+    stub_request(:post, %r{https://www.googleapis.com/upload/drive/v3/files})
+      .to_return(json_http(id: "read-1", name: "notes.txt", mimeType: "text/plain"))
+
+    reader = Object.new
+    def reader.read
+      "from-read"
+    end
+
+    uploaded = client.upload_file(io: reader, filename: "notes.txt", content_type: "text/plain")
+
+    assert_equal "read-1", uploaded.id
+    assert_requested(:post, %r{https://www.googleapis.com/upload/drive/v3/files}) do |request|
+      request.body.include?("from-read")
+    end
+  end
+
+  def test_upload_rejects_io_that_cannot_be_read
+    error = assert_raises(ArgumentError) do
+      client.upload_file(io: Object.new, filename: "notes.txt", content_type: "text/plain")
+    end
+
+    assert_includes error.message, "read"
+  end
+
+  def test_upload_redirect_raises_request_error
+    stub_request(:post, %r{https://www.googleapis.com/upload/drive/v3/files})
+      .to_return(
+        status: 307,
+        headers: { "Location" => "https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart" }
+      )
+
+    error = assert_raises(RecordingStudioGoogleDrive::RequestError) do
+      client.upload_file(io: "hello", filename: "notes.txt", content_type: "text/plain")
+    end
+
+    refute_kind_of RecordingStudioGoogleDrive::ReconnectRequired, error
+    assert_includes error.message, "refused a redirect"
+    refute_includes error.message, "too many"
+    assert_not_requested(:get, %r{https://www.googleapis.com/upload/drive/v3/files})
+  end
+
   def test_upload_accepts_non_ascii_filename_with_binary_body
     binary = "\x00\xFF\x80".b
     stub_request(:post, %r{https://www.googleapis.com/upload/drive/v3/files})
@@ -210,6 +252,24 @@ class ClientTest < Minitest::Test
     assert_kind_of RecordingStudioGoogleDrive::Error, error
     refute_includes error.message, "UNAUTHENTICATED secret"
     assert_includes error.message, "HTTP 401"
+  end
+
+  def test_unauthorized_client_raises_request_error
+    stub_list_error(status: 400, body: { error: "unauthorized_client" })
+
+    error = assert_raises(RecordingStudioGoogleDrive::RequestError) { client.list }
+    refute_kind_of RecordingStudioGoogleDrive::ReconnectRequired, error
+    assert_equal 400, error.status
+    assert_equal "unauthorized_client", error.code
+  end
+
+  def test_numeric_nested_error_code_is_not_the_request_code
+    stub_list_error(status: 403, body: { error: { code: 403, message: "rate limited" } })
+
+    error = assert_raises(RecordingStudioGoogleDrive::RequestError) { client.list }
+    assert_equal 403, error.status
+    assert_nil error.code
+    assert_equal "Google Drive request failed (HTTP 403)", error.message
   end
 
   def test_invalid_grant_on_400_raises_reconnect_required
@@ -269,15 +329,15 @@ class ClientTest < Minitest::Test
     assert_includes error.message, "INTERNAL"
   end
 
-  def test_socket_error_is_wrapped_as_request_error_with_timeouts
+  def test_connection_refused_is_wrapped_as_request_error_with_timeouts
     captured = {}
     Net::HTTP.stub(:start, lambda { |_host, _port, **options, &_|
       captured.replace(options)
-      raise SocketError, "fail"
+      raise Errno::ECONNREFUSED
     }) do
       error = assert_raises(RecordingStudioGoogleDrive::RequestError) { client.list }
       refute_kind_of RecordingStudioGoogleDrive::ReconnectRequired, error
-      assert_includes error.message, "SocketError"
+      assert_includes error.message, "ECONNREFUSED"
     end
 
     assert_equal true, captured[:use_ssl]
