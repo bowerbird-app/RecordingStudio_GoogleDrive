@@ -27,8 +27,4 @@ module RecordingStudioGoogleDrive
     end
     private_class_method :integer_or_nil
   end
-
-  FilePage = Data.define(:files, :next_page_token)
-
-  DownloadedFile = Data.define(:id, :filename, :content_type, :body, :byte_size)
 end

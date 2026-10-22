@@ -12,13 +12,16 @@ module RecordingStudioGoogleDrive
 
     def from_response(response, raw_body)
       body = parse_object(raw_body)
-      klass = reconnect?(response, body) ? ReconnectRequired : RequestError
-      klass.new(error_message(response, body, raw_body))
+      status = response.code.to_i
+      code = structured_error_code(body)
+      message = error_message(status, code)
+      return ReconnectRequired.new(message) if reconnect?(response, body)
+
+      RequestError.new(message, status: status, code: code)
     end
 
     def reconnect?(response, body)
-      code = response.code.to_i
-      return true if code == 401
+      return true if response.code.to_i == 401
       return true if reconnect_oauth_code?(body)
       return true if reconnect_status?(body)
       return true if reconnect_reason?(body)
@@ -31,8 +34,7 @@ module RecordingStudioGoogleDrive
     end
 
     def reconnect_status?(body)
-      status = nested_error(body)["status"].to_s
-      RECONNECT_STATUSES.include?(status)
+      RECONNECT_STATUSES.include?(nested_error(body)["status"].to_s)
     end
 
     def reconnect_reason?(body)
@@ -47,22 +49,26 @@ module RecordingStudioGoogleDrive
       error.is_a?(Hash) ? error : {}
     end
 
-    def error_message(response, body, raw_body)
+    def structured_error_code(body)
+      error = body["error"]
+      return error if error.is_a?(String) && !error.empty?
+
       nested = nested_error(body)
-      first_text(nested["message"], body["error_description"]) || fallback_message(response, raw_body)
+      first_text(nested["status"], nested["code"])
+    end
+
+    def error_message(status, code)
+      return "Google Drive request failed (HTTP #{status}): #{code}" if present?(code)
+
+      "Google Drive request failed (HTTP #{status})"
     end
 
     def first_text(*values)
       values.map(&:to_s).find { |value| !value.empty? }
     end
 
-    def fallback_message(response, raw_body)
-      status = response.code.to_s
-      snippet = raw_body.to_s.gsub(/\s+/, " ").strip
-      snippet = "#{snippet[0, 197]}..." if snippet.length > 200
-      details = snippet.empty? ? "no response body" : snippet
-
-      "Google Drive request failed (HTTP #{status}): #{details}"
+    def present?(value)
+      !value.nil? && !value.to_s.empty?
     end
 
     def parse_object(raw)

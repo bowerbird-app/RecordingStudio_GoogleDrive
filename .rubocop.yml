@@ -20,15 +20,11 @@ Layout/LineLength:
 Metrics/ClassLength:
   Exclude:
     - 'test/**/*'
-    - 'lib/recording_studio_google_drive/client.rb'
-    - 'lib/recording_studio_google_drive/http.rb'
 
 Metrics/MethodLength:
   Exclude:
     - 'test/**/*'
     - 'lib/generators/**/*'
-    - 'lib/recording_studio_google_drive/client.rb'
-    - 'lib/recording_studio_google_drive/http.rb'
 
 Metrics/AbcSize:
   Exclude:

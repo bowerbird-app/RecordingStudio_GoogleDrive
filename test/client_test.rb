@@ -1,264 +1,303 @@
 # frozen_string_literal: true
 
 require "json"
-require "net/http"
 require "stringio"
 require "test_helper"
+require "webmock/minitest"
 
 class ClientTest < Minitest::Test
-  FakeResponse = Struct.new(:body, :code, :headers, :success, keyword_init: true) do
-    def [](key)
-      headers[key]
-    end
+  def setup
+    WebMock.enable!
+    WebMock.disable_net_connect!
+    WebMock.reset!
+  end
 
-    def is_a?(klass)
-      return success if klass == Net::HTTPSuccess
+  def teardown
+    WebMock.reset!
+    WebMock.allow_net_connect!
+  end
 
-      super
+  def test_search_escapes_backslashes_before_quotes
+    requests = stub_list_page("files" => [])
+
+    client.search("foo\\bar'baz")
+
+    q = query_params(requests.first.uri).fetch("q")
+    assert_equal "trashed = false and name contains 'foo\\\\bar\\'baz'", q
+  end
+
+  def test_search_escapes_quote_break_payload_in_q
+    requests = stub_list_page("files" => [])
+    payload = "' or name contains 'secret"
+
+    client.search(payload)
+
+    q = query_params(requests.first.uri).fetch("q")
+    refute_includes q, "name contains '#{payload}'"
+    assert_equal "trashed = false and name contains '\\' or name contains \\'secret'", q
+  end
+
+  def test_list_walks_page_two_with_the_cursor
+    stub_request(:get, %r{https://www.googleapis.com/drive/v3/files})
+      .to_return do |request|
+        params = query_params(request.uri)
+        if params["pageToken"] == "cursor-2"
+          json_http(files: [{ "id" => "b", "name" => "Two", "mimeType" => "text/plain" }])
+        else
+          json_http(
+            files: [{ "id" => "a", "name" => "One", "mimeType" => "text/plain" }],
+            nextPageToken: "cursor-2"
+          )
+        end
+      end
+
+    page_one = client.list
+    assert_equal ["a"], page_one.entries.map(&:id)
+    assert_equal "cursor-2", page_one.next_cursor
+    assert page_one.more?
+
+    page_two = client.list(cursor: page_one.next_cursor)
+    assert_equal ["b"], page_two.entries.map(&:id)
+    assert_nil page_two.next_cursor
+    refute page_two.more?
+
+    assert_requested(:get, %r{https://www.googleapis.com/drive/v3/files}) do |request|
+      query_params(request.uri)["pageToken"] == "cursor-2"
     end
   end
 
-  FakeRedirectResponse = Struct.new(:body, :code, :headers, keyword_init: true) do
-    def [](key)
-      headers[key]
-    end
+  def test_list_browses_a_parent_folder
+    requests = stub_list_page("files" => [])
 
-    def is_a?(klass)
-      return true if klass == Net::HTTPRedirection
+    client.list(parent_id: "root")
 
-      super
-    end
-  end
-
-  def test_list_files_pages_and_escapes_search
-    captured = { requests: [] }
-    response = json_response(
-      "files" => [
-        { "id" => "file-1", "name" => "Brief", "mimeType" => "application/pdf", "size" => "12" }
-      ],
-      "nextPageToken" => "next-page"
-    )
-
-    stub_start(responses: [response], captured: captured) do
-      page = client.list_files(query: "O'Hara", page_token: "page-2", page_size: 10)
-
-      assert_equal 1, page.files.size
-      assert_equal "file-1", page.files.first.id
-      assert_equal "Brief", page.files.first.name
-      assert_equal "next-page", page.next_page_token
-    end
-
-    params = query_params(captured[:requests].first.fetch(:path))
-    assert_equal "10", params.fetch("pageSize")
-    assert_equal "page-2", params.fetch("pageToken")
-    assert_equal "true", params.fetch("supportsAllDrives")
-    assert_equal "trashed = false and name contains 'O\\'Hara'", params.fetch("q")
-    assert_equal "Bearer access-token", captured[:requests].first.fetch(:authorization)
-  end
-
-  def test_list_files_browses_a_parent_folder
-    captured = { requests: [] }
-    response = json_response("files" => [])
-
-    stub_start(responses: [response], captured: captured) do
-      client.list_files(parent_id: "root")
-    end
-
-    params = query_params(captured[:requests].first.fetch(:path))
-    assert_equal "trashed = false and 'root' in parents", params.fetch("q")
+    assert_equal "trashed = false and 'root' in parents", query_params(requests.first.uri).fetch("q")
   end
 
   def test_fetch_file_returns_metadata_and_encodes_the_id
-    captured = { requests: [] }
-    response = json_response(
-      "id" => "file/1",
-      "name" => "Preview",
-      "mimeType" => "image/png",
-      "resourceKey" => "rk-1",
-      "webViewLink" => "https://drive.google.test/file/1"
-    )
+    stub_request(:get, %r{https://www.googleapis.com/drive/v3/files/file%2F1})
+      .to_return(json_http(
+                   id: "file/1",
+                   name: "Preview",
+                   mimeType: "image/png",
+                   resourceKey: "rk-1",
+                   webViewLink: "https://drive.google.test/file/1"
+                 ))
 
-    stub_start(responses: [response], captured: captured) do
-      file = client.fetch_file("file/1", resource_key: "rk-1")
+    file = client.fetch_file("file/1", resource_key: "rk-1")
 
-      assert_equal "file/1", file.id
-      assert_equal "Preview", file.name
-      assert_equal "image/png", file.mime_type
-      assert_equal "rk-1", file.resource_key
-      refute file.folder?
+    assert_equal "file/1", file.id
+    assert_equal "Preview", file.name
+    assert_equal "image/png", file.mime_type
+    assert_equal "rk-1", file.resource_key
+    refute file.folder?
+    assert_requested(:get, %r{https://www.googleapis.com/drive/v3/files/file%2F1}) do |request|
+      params = query_params(request.uri)
+      params["resourceKey"] == "rk-1" && params["supportsAllDrives"] == "true"
     end
-
-    path, query = captured[:requests].first.fetch(:path).split("?", 2)
-    params = URI.decode_www_form(query).to_h
-    assert_equal "/drive/v3/files/file%2F1", path
-    assert_equal "rk-1", params.fetch("resourceKey")
-    assert_equal "true", params.fetch("supportsAllDrives")
   end
 
-  def test_download_file_exports_google_docs_to_pdf
-    captured = { requests: [] }
-    metadata = json_response(
-      "id" => "doc-1",
-      "name" => "Project brief",
-      "mimeType" => "application/vnd.google-apps.document"
+  def test_download_exports_google_docs_to_pdf
+    stub_download_export(
+      id: "doc-1",
+      name: "Project brief",
+      mime_type: "application/vnd.google-apps.document",
+      export_type: "application/pdf",
+      body: "pdf-binary"
     )
-    export = FakeResponse.new(body: "pdf-binary", code: "200", headers: {}, success: true)
 
-    stub_start(responses: [metadata, export], captured: captured) do
-      downloaded = client.download_file("doc-1")
+    downloaded = client.download("doc-1")
 
-      assert_equal "doc-1", downloaded.id
-      assert_equal "Project brief.pdf", downloaded.filename
-      assert_equal "application/pdf", downloaded.content_type
-      assert_equal "pdf-binary", downloaded.body
-    end
-
-    export_path, export_query = captured[:requests][1].fetch(:path).split("?", 2)
-    params = URI.decode_www_form(export_query).to_h
-    assert_equal "/drive/v3/files/doc-1/export", export_path
-    assert_equal "application/pdf", params.fetch("mimeType")
+    assert_equal "Project brief.pdf", downloaded.filename
+    assert_equal "application/pdf", downloaded.content_type
+    assert_equal "pdf-binary", downloaded.body
   end
 
-  def test_download_file_reads_binary_media_and_follows_usercontent_redirect
-    captured = { requests: [] }
-    metadata = json_response(
-      "id" => "file-1",
-      "name" => "Preview.png",
-      "mimeType" => "image/png"
-    )
-    redirect = FakeRedirectResponse.new(
-      body: "",
-      code: "302",
-      headers: { "location" => "https://lh3.googleusercontent.com/download/abc" }
-    )
-    bytes = FakeResponse.new(body: "image-bytes", code: "200", headers: {}, success: true)
+  def test_download_exports_sheets_slides_and_drawings
+    {
+      "application/vnd.google-apps.spreadsheet" => ["text/csv", ".csv", "sheet-csv"],
+      "application/vnd.google-apps.presentation" => ["application/pdf", ".pdf", "slides-pdf"],
+      "application/vnd.google-apps.drawing" => ["image/png", ".png", "drawing-png"]
+    }.each do |mime_type, (export_type, extension, body)|
+      WebMock.reset!
+      stub_download_export(
+        id: "export-1",
+        name: "Board",
+        mime_type: mime_type,
+        export_type: export_type,
+        body: body
+      )
 
-    stub_start(responses: [metadata, redirect, bytes], captured: captured) do
-      downloaded = client.download_file("file-1")
+      downloaded = client.download("export-1")
 
-      assert_equal "Preview.png", downloaded.filename
-      assert_equal "image/png", downloaded.content_type
-      assert_equal "image-bytes", downloaded.body
+      assert_equal "Board#{extension}", downloaded.filename
+      assert_equal export_type, downloaded.content_type
+      assert_equal body, downloaded.body
     end
+  end
 
-    media_params = query_params(captured[:requests][1].fetch(:path))
-    assert_equal "media", media_params.fetch("alt")
-    assert_equal "Bearer access-token", captured[:requests][1].fetch(:authorization)
-    assert_equal "lh3.googleusercontent.com", captured[:requests][2].fetch(:host)
-    assert_nil captured[:requests][2].fetch(:authorization)
+  def test_download_reads_binary_media_and_follows_usercontent_redirect
+    stub_request(:get, "https://www.googleapis.com/drive/v3/files/file-1")
+      .with(query: hash_including("fields"))
+      .to_return(json_http(id: "file-1", name: "Preview.png", mimeType: "image/png"))
+    stub_request(:get, "https://www.googleapis.com/drive/v3/files/file-1")
+      .with(query: hash_including("alt" => "media"))
+      .to_return(status: 302, headers: { "Location" => "https://lh3.googleusercontent.com/download/abc" })
+    stub_request(:get, "https://lh3.googleusercontent.com/download/abc")
+      .to_return(status: 200, body: "image-bytes")
+
+    downloaded = client.download("file-1")
+
+    assert_equal "Preview.png", downloaded.filename
+    assert_equal "image/png", downloaded.content_type
+    assert_equal "image-bytes", downloaded.body
+    assert_requested(:get, "https://www.googleapis.com/drive/v3/files/file-1") do |request|
+      request.headers["Authorization"] == "Bearer access-token" &&
+        query_params(request.uri)["alt"] == "media"
+    end
+    assert_requested(:get, "https://lh3.googleusercontent.com/download/abc") do |request|
+      request.headers["Authorization"].nil?
+    end
   end
 
   def test_upload_file_posts_multipart_metadata_and_bytes
-    captured = { requests: [] }
-    response = json_response(
-      "id" => "new-1",
-      "name" => "notes.txt",
-      "mimeType" => "text/plain",
-      "webViewLink" => "https://drive.google.test/new-1"
+    stub_request(:post, %r{https://www.googleapis.com/upload/drive/v3/files})
+      .to_return(json_http(id: "new-1", name: "notes.txt", mimeType: "text/plain"))
+
+    uploaded = client.upload_file(
+      io: StringIO.new("hello"),
+      filename: "notes.txt",
+      content_type: "text/plain",
+      parent_id: "root"
     )
 
-    stub_start(responses: [response], captured: captured) do
-      uploaded = client.upload_file(
-        io: StringIO.new("hello"),
-        filename: "notes.txt",
-        content_type: "text/plain",
-        parent_id: "root"
-      )
-
-      assert_equal "new-1", uploaded.id
-      assert_equal "notes.txt", uploaded.name
+    assert_equal "new-1", uploaded.id
+    assert_requested(:post, %r{https://www.googleapis.com/upload/drive/v3/files}) do |request|
+      request.uri.query.include?("uploadType=multipart") &&
+        request.body.include?("\"name\":\"notes.txt\"") &&
+        request.body.include?("\"parents\":[\"root\"]") &&
+        request.body.include?("hello") &&
+        request.headers["Content-Type"].start_with?("multipart/related; boundary=")
     end
+  end
 
-    request = captured[:requests].first
-    assert_equal "www.googleapis.com", request.fetch(:host)
-    assert_includes request.fetch(:path), "/upload/drive/v3/files"
-    assert_includes request.fetch(:path), "uploadType=multipart"
-    assert_includes request.fetch(:body), "\"name\":\"notes.txt\""
-    assert_includes request.fetch(:body), "\"parents\":[\"root\"]"
-    assert_includes request.fetch(:body), "hello"
-    assert_match(%r{\Amultipart/related; boundary=}, request.fetch(:content_type))
+  def test_upload_accepts_non_ascii_filename_with_binary_body
+    binary = "\x00\xFF\x80".b
+    stub_request(:post, %r{https://www.googleapis.com/upload/drive/v3/files})
+      .to_return(json_http(id: "pdf-1", name: "résumé.pdf", mimeType: "application/pdf"))
+
+    uploaded = client.upload_file(
+      io: binary,
+      filename: "résumé.pdf",
+      content_type: "application/pdf"
+    )
+
+    assert_equal "pdf-1", uploaded.id
+    assert_requested(:post, %r{https://www.googleapis.com/upload/drive/v3/files}) do |request|
+      body = request.body.b
+      body.include?("Content-Type: application/pdf\r\n\r\n".b) &&
+        body.include?(JSON.generate(name: "résumé.pdf", mimeType: "application/pdf").b) &&
+        body.include?(binary)
+    end
   end
 
   def test_expired_token_raises_reconnect_required
-    response = FakeResponse.new(
-      body: { "error" => { "code" => 401, "status" => "UNAUTHENTICATED" } }.to_json,
-      code: "401",
-      headers: {},
-      success: false
+    stub_list_error(
+      status: 401,
+      body: { error: { code: 401, status: "UNAUTHENTICATED" } }
     )
 
-    stub_start(responses: [response]) do
-      error = assert_raises(RecordingStudioGoogleDrive::ReconnectRequired) do
-        client.list_files
-      end
+    error = assert_raises(RecordingStudioGoogleDrive::ReconnectRequired) { client.list }
+    assert_kind_of RecordingStudioGoogleDrive::Error, error
+    refute_includes error.message, "UNAUTHENTICATED secret"
+    assert_includes error.message, "HTTP 401"
+  end
 
-      assert_kind_of RecordingStudioGoogleDrive::Error, error
-    end
+  def test_invalid_grant_on_400_raises_reconnect_required
+    stub_list_error(status: 400, body: { error: "invalid_grant", error_description: "token expired" })
+
+    error = assert_raises(RecordingStudioGoogleDrive::ReconnectRequired) { client.list }
+    refute_includes error.message, "token expired"
+    assert_includes error.message, "invalid_grant"
+  end
+
+  def test_invalid_grant_on_401_raises_reconnect_required
+    stub_list_error(status: 401, body: { error: "invalid_grant" })
+
+    assert_raises(RecordingStudioGoogleDrive::ReconnectRequired) { client.list }
   end
 
   def test_revoked_token_raises_reconnect_required
-    response = FakeResponse.new(
-      body: { "error" => "invalid_token" }.to_json,
-      code: "401",
-      headers: {},
-      success: false
-    )
+    stub_request(:get, %r{https://www.googleapis.com/drive/v3/files/file-1})
+      .to_return(status: 401, body: { error: "invalid_token" }.to_json)
 
-    stub_start(responses: [response]) do
-      assert_raises(RecordingStudioGoogleDrive::ReconnectRequired) do
-        client.fetch_file("file-1")
-      end
-    end
+    assert_raises(RecordingStudioGoogleDrive::ReconnectRequired) { client.fetch_file("file-1") }
   end
 
   def test_insufficient_scope_raises_reconnect_required
-    response = FakeResponse.new(
-      body: { "error" => { "code" => 403, "status" => "ACCESS_TOKEN_SCOPE_INSUFFICIENT" } }.to_json,
-      code: "403",
-      headers: {},
-      success: false
-    )
+    stub_list_error(status: 403, body: { error: { code: 403, status: "ACCESS_TOKEN_SCOPE_INSUFFICIENT" } })
 
-    stub_start(responses: [response]) do
-      assert_raises(RecordingStudioGoogleDrive::ReconnectRequired) do
-        client.list_files
-      end
-    end
+    assert_raises(RecordingStudioGoogleDrive::ReconnectRequired) { client.list }
   end
 
   def test_file_permission_denied_is_not_reconnect
-    response = FakeResponse.new(
-      body: {
-        "error" => {
-          "code" => 403,
-          "status" => "PERMISSION_DENIED",
-          "errors" => [{ "reason" => "insufficientPermissions" }]
-        }
-      }.to_json,
-      code: "403",
-      headers: {},
-      success: false
-    )
+    stub_request(:get, %r{https://www.googleapis.com/drive/v3/files/file-1})
+      .to_return(
+        status: 403,
+        body: {
+          error: {
+            code: 403,
+            status: "PERMISSION_DENIED",
+            errors: [{ reason: "insufficientPermissions" }]
+          }
+        }.to_json
+      )
 
-    stub_start(responses: [response]) do
-      assert_raises(RecordingStudioGoogleDrive::RequestError) do
-        client.fetch_file("file-1")
-      end
+    error = assert_raises(RecordingStudioGoogleDrive::RequestError) { client.fetch_file("file-1") }
+    assert_equal 403, error.status
+    assert_equal "PERMISSION_DENIED", error.code
+    refute_includes error.message, "insufficientPermissions"
+  end
+
+  def test_server_error_raises_request_error_not_reconnect
+    stub_list_error(status: 500, body: { error: { code: 500, message: "backend exploded", status: "INTERNAL" } })
+
+    error = assert_raises(RecordingStudioGoogleDrive::RequestError) { client.list }
+    refute_kind_of RecordingStudioGoogleDrive::ReconnectRequired, error
+    assert_equal 500, error.status
+    refute_includes error.message, "backend exploded"
+    assert_includes error.message, "HTTP 500"
+    assert_includes error.message, "INTERNAL"
+  end
+
+  def test_socket_error_is_wrapped_as_request_error_with_timeouts
+    captured = {}
+    Net::HTTP.stub(:start, lambda { |_host, _port, **options, &_|
+      captured.replace(options)
+      raise SocketError, "fail"
+    }) do
+      error = assert_raises(RecordingStudioGoogleDrive::RequestError) { client.list }
+      refute_kind_of RecordingStudioGoogleDrive::ReconnectRequired, error
+      assert_includes error.message, "SocketError"
     end
+
+    assert_equal true, captured[:use_ssl]
+    assert_equal 10, captured[:open_timeout]
+    assert_equal 30, captured[:read_timeout]
+    assert_equal 30, captured[:write_timeout]
   end
 
   def test_callable_and_access_token_object_both_work
-    captured = { requests: [] }
-    response = json_response("files" => [])
+    requests = stub_list_page("files" => [])
     provider = Struct.new(:access_token).new("object-token")
 
-    stub_start(responses: [response, response], captured: captured) do
-      RecordingStudioGoogleDrive::Client.new(token_provider: -> { "lambda-token" }).list_files
-      RecordingStudioGoogleDrive::Client.new(token_provider: provider).list_files
-    end
+    RecordingStudioGoogleDrive::Client.new(token_provider: -> { "lambda-token" }).list
+    RecordingStudioGoogleDrive::Client.new(token_provider: provider).list
 
-    assert_equal "Bearer lambda-token", captured[:requests][0].fetch(:authorization)
-    assert_equal "Bearer object-token", captured[:requests][1].fetch(:authorization)
+    assert_equal(
+      ["Bearer lambda-token", "Bearer object-token"],
+      requests.map { |request| request.headers["Authorization"] }
+    )
   end
 
   private
@@ -267,34 +306,36 @@ class ClientTest < Minitest::Test
     RecordingStudioGoogleDrive::Client.new(token_provider: -> { "access-token" })
   end
 
-  def json_response(hash)
-    FakeResponse.new(body: hash.to_json, code: "200", headers: {}, success: true)
-  end
-
-  def query_params(path)
-    _path, query = path.split("?", 2)
-    URI.decode_www_form(query.to_s).to_h
-  end
-
-  def stub_start(responses:, captured: nil, &)
-    queue = responses.dup
-    captured ||= { requests: [] }
-    captured[:requests] ||= []
-
-    Net::HTTP.stub(:start, lambda { |host, _port, **options, &http_block|
-      assert_equal true, options[:use_ssl]
-      http = Object.new
-      http.define_singleton_method(:request) do |request|
-        captured[:requests] << {
-          host: host,
-          path: request.path,
-          authorization: request["Authorization"],
-          body: request.body,
-          content_type: request["Content-Type"]
-        }
-        queue.shift
+  def stub_list_page(payload)
+    requests = []
+    stub_request(:get, %r{https://www.googleapis.com/drive/v3/files})
+      .with do |request|
+        requests << request
+        true
       end
-      http_block.call(http)
-    }, &)
+      .to_return(json_http(payload))
+    requests
+  end
+
+  def stub_list_error(status:, body:)
+    stub_request(:get, %r{https://www.googleapis.com/drive/v3/files})
+      .to_return(status: status, body: body.to_json)
+  end
+
+  def stub_download_export(id:, name:, mime_type:, export_type:, body:)
+    stub_request(:get, "https://www.googleapis.com/drive/v3/files/#{id}")
+      .with(query: hash_including("fields"))
+      .to_return(json_http(id: id, name: name, mimeType: mime_type))
+    stub_request(:get, "https://www.googleapis.com/drive/v3/files/#{id}/export")
+      .with(query: hash_including("mimeType" => export_type))
+      .to_return(status: 200, body: body)
+  end
+
+  def json_http(payload)
+    { status: 200, headers: { "Content-Type" => "application/json" }, body: payload.to_json }
+  end
+
+  def query_params(uri)
+    URI.decode_www_form(URI.parse(uri.to_s).query.to_s).to_h
   end
 end

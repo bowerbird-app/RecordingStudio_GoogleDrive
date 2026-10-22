@@ -3,12 +3,18 @@
 module RecordingStudioGoogleDrive
   class AccessToken
     def initialize(provider)
+      unless provider.respond_to?(:call) || provider.respond_to?(:access_token)
+        raise ArgumentError, "token provider must respond to call or access_token"
+      end
+
       @provider = provider
     end
 
     def to_s
       value = read
-      raise ArgumentError, "token provider returned a blank access token" if value.to_s.strip.empty?
+      if value.nil? || value.to_s.strip.empty?
+        raise ReconnectRequired, "Google Drive access token is missing"
+      end
 
       value.to_s
     end
@@ -16,13 +22,7 @@ module RecordingStudioGoogleDrive
     private
 
     def read
-      if @provider.respond_to?(:call)
-        @provider.call
-      elsif @provider.respond_to?(:access_token)
-        @provider.access_token
-      else
-        raise ArgumentError, "token provider must respond to call or access_token"
-      end
+      @provider.respond_to?(:call) ? @provider.call : @provider.access_token
     end
   end
 end

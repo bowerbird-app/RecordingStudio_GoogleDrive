@@ -4,14 +4,6 @@ require "erb"
 
 module RecordingStudioGoogleDrive
   class Client
-    EXPORT_MIME_TYPES = {
-      "application/vnd.google-apps.document" => { content_type: "application/pdf", extension: ".pdf" },
-      "application/vnd.google-apps.drawing" => { content_type: "image/png", extension: ".png" },
-      "application/vnd.google-apps.presentation" => { content_type: "application/pdf", extension: ".pdf" },
-      "application/vnd.google-apps.spreadsheet" => { content_type: "text/csv", extension: ".csv" }
-    }.freeze
-
-    LIST_FIELDS = "nextPageToken,files(id,name,mimeType,size,modifiedTime,webViewLink,resourceKey)"
     FILE_FIELDS = "id,name,mimeType,resourceKey,webViewLink,size,modifiedTime"
 
     def initialize(token_provider:, page_size: nil)
@@ -20,19 +12,23 @@ module RecordingStudioGoogleDrive
       @http = Http.new(access_token: @access_token)
     end
 
-    def list_files(query: nil, page_token: nil, page_size: nil, parent_id: nil)
-      raw = http.get_json(
-        "/files",
-        fields: LIST_FIELDS,
-        includeItemsFromAllDrives: true,
-        pageSize: resolved_page_size(page_size),
-        pageToken: page_token,
-        q: drive_query(query, parent_id),
-        supportsAllDrives: true
+    def list(parent_id: nil, cursor: nil, page_size: nil)
+      Listing.page(
+        http,
+        query: nil,
+        parent_id: parent_id,
+        cursor: cursor,
+        page_size: resolved_page_size(page_size)
       )
-      FilePage.new(
-        files: Array(raw["files"]).map { |row| DriveFile.from_api(row) },
-        next_page_token: raw["nextPageToken"]
+    end
+
+    def search(query, cursor: nil, page_size: nil)
+      Listing.page(
+        http,
+        query: query,
+        parent_id: nil,
+        cursor: cursor,
+        page_size: resolved_page_size(page_size)
       )
     end
 
@@ -46,16 +42,13 @@ module RecordingStudioGoogleDrive
       DriveFile.from_api(raw)
     end
 
-    def download_file(file_id, resource_key: nil)
+    def download(file_id, resource_key: nil)
       metadata = fetch_file(file_id, resource_key: resource_key)
-      export = EXPORT_MIME_TYPES[metadata.mime_type]
-      body = download_body(file_id, resource_key, export)
+      export = ExportFormats.lookup(metadata.mime_type)
       DownloadedFile.new(
-        id: metadata.id,
-        filename: download_filename(metadata.name, export),
-        content_type: download_content_type(metadata.mime_type, export),
-        body: body,
-        byte_size: body.bytesize
+        filename: ExportFormats.filename(metadata.name, export),
+        content_type: ExportFormats.content_type(metadata.mime_type, export),
+        body: download_body(file_id, resource_key, export)
       )
     end
 
@@ -64,7 +57,7 @@ module RecordingStudioGoogleDrive
       metadata[:parents] = [parent_id] if parent_id
       raw = http.post_multipart(
         "/files",
-        params: { supportsAllDrives: true, fields: "id,name,mimeType,webViewLink,size,modifiedTime,resourceKey" },
+        params: { supportsAllDrives: true, fields: FILE_FIELDS },
         metadata: metadata,
         body: read_io(io),
         content_type: content_type
@@ -81,48 +74,18 @@ module RecordingStudioGoogleDrive
     end
 
     def download_body(file_id, resource_key, export)
-      if export
-        http.get_bytes(
-          "#{file_resource_path(file_id)}/export",
-          mimeType: export.fetch(:content_type),
-          resourceKey: resource_key,
-          supportsAllDrives: true
-        )
-      else
-        http.get_bytes(
-          file_resource_path(file_id),
-          alt: "media",
-          resourceKey: resource_key,
-          supportsAllDrives: true
-        )
-      end
+      path = file_resource_path(file_id)
+      return http.get_bytes("#{path}/export", export_params(resource_key, export)) if export
+
+      http.get_bytes(path, media_params(resource_key))
     end
 
-    def download_filename(name, export)
-      export ? append_extension(name, export.fetch(:extension)) : name
+    def export_params(resource_key, export)
+      { mimeType: export.fetch(:content_type), resourceKey: resource_key, supportsAllDrives: true }
     end
 
-    def download_content_type(mime_type, export)
-      export ? export.fetch(:content_type) : mime_type
-    end
-
-    def drive_query(query, parent_id)
-      clauses = ["trashed = false"]
-      clauses << "'#{escape_drive_string(parent_id)}' in parents" if present?(parent_id)
-      clauses << "name contains '#{escape_drive_string(query)}'" if present?(query)
-      clauses.join(" and ")
-    end
-
-    def escape_drive_string(value)
-      value.to_s.gsub("'", "\\\\'")
-    end
-
-    def present?(value)
-      !value.nil? && !value.to_s.empty?
-    end
-
-    def append_extension(filename, extension)
-      filename.end_with?(extension) ? filename : "#{filename}#{extension}"
+    def media_params(resource_key)
+      { alt: "media", resourceKey: resource_key, supportsAllDrives: true }
     end
 
     def file_resource_path(file_id)
@@ -130,7 +93,7 @@ module RecordingStudioGoogleDrive
     end
 
     def read_io(io)
-      return io if io.is_a?(String)
+      return io if io.instance_of?(String)
       return io.read if io.respond_to?(:read)
 
       io.to_s
