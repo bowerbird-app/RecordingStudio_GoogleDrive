@@ -2,7 +2,7 @@
 
 source "https://rubygems.org"
 
-# Specify your gem's dependencies in gem_template.gemspec
+# Specify your gem's dependencies in recording_studio_google_drive.gemspec
 gemspec
 
 # recording_studio is not published to RubyGems; resolve the gemspec pin from GitHub.
@@ -16,6 +16,7 @@ group :development, :test do
   gem "debug"
   gem "minitest-mock"
   gem "simplecov", require: false
+  gem "webmock", require: false
 end
 
 group :development do

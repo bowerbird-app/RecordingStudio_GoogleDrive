@@ -1,0 +1,5 @@
+development:
+  page_size: 25
+
+production:
+  page_size: 25
