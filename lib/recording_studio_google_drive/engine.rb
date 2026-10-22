@@ -27,5 +27,10 @@ module RecordingStudioGoogleDrive
                 after: "recording_studio_google_drive.load_config" do |_app|
       RecordingStudioGoogleDrive.configuration.hooks.run(:after_initialize, self)
     end
+
+    initializer "recording_studio_google_drive.register_oauth_provider",
+                after: :load_config_initializers do
+      RecordingStudioGoogleDrive.register_oauth_provider!
+    end
   end
 end

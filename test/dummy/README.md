@@ -9,6 +9,7 @@ This Rails app exists to validate the Recording Studio Google Drive addon in a r
 - Root workspace plus seeded folder and page recordables
 - Recording Studio default layout, FlatPack assets, and Tailwind source scanning
 - Mounted `RecordingStudio::Engine` route behavior inside a host app
+- Oauth outbound Connect, Disconnect, and Reconnect for Google Drive against a local fake provider
 - Dummy-only `/docs/*` pages for gem-specific onboarding
 
 ## Quick Start
@@ -27,10 +28,13 @@ Then open the app and sign in with:
 - Email: `admin@admin.com`
 - Password: `Password`
 
+Dummy does not need real Google credentials. It registers `:google_drive` against `/fake_oauth/*`.
+
 ## Useful Routes
 
-- `/` - dummy app home page
+- `/` - Connect, Disconnect, and Reconnect Google Drive
 - `/recording_studio` - redirects to `/` while the mounted Recording Studio engine stays available under that prefix for non-root routes
+- `/recording_studio_oauth` - Oauth engine (outbound callback lives here)
 - `/users/sign_in` - Devise sign-in page
 - `/docs/install`, `/docs/config` - dummy-only starter pages
 - `/up` - Rails health check

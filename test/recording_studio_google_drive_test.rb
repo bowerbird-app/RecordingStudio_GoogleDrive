@@ -4,7 +4,7 @@ require "test_helper"
 
 class RecordingStudioGoogleDriveTest < Minitest::Test
   def test_version_matches_release
-    assert_equal "0.1.0", ::RecordingStudioGoogleDrive::VERSION
+    assert_equal "0.2.0", ::RecordingStudioGoogleDrive::VERSION
   end
 
   def test_engine_exists
@@ -15,6 +15,7 @@ class RecordingStudioGoogleDriveTest < Minitest::Test
     gemspec = File.read(File.expand_path("../recording_studio_google_drive.gemspec", __dir__))
 
     assert_includes gemspec, 'spec.add_dependency "recording_studio", "~> 4.2"'
+    assert_includes gemspec, 'spec.add_dependency "recording_studio_oauth", ">= 0.14.1", "< 1.0"'
     assert_includes gemspec, 'spec.required_ruby_version = ">= 3.3.0"'
   end
 
@@ -52,13 +53,20 @@ class RecordingStudioGoogleDriveTest < Minitest::Test
     assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_trashable", tag: "v0.11.0", require: false'
     refute_includes gemfile, 'tag: "v0.10.0"'
     refute_includes gemfile, 'tag: "v0.17.0"'
-    refute_includes gemfile, 'tag: "v0.15.0"'
+    refute_includes gemfile, 'github: "bowerbird-app/RecordingStudio_accessible", tag: "v0.15.0"'
     refute_includes gemfile, 'tag: "v0.10.1"'
+    assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_Oauth", tag: "v0.14.1"'
+    assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_admin", tag: "v2.2.0"'
     assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_root_switchable", tag: "v0.9.0"'
     assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_cache", tag: "v0.5.0"'
+    assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_metrics", tag: "v0.5.0"'
+    assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_attachable", tag: "v0.15.0"'
+    assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_logs", tag: "v0.4.1"'
+    assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_site_settings", tag: "v0.2.0"'
+    assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_api", tag: "v0.14.0"'
     refute_includes gemfile, 'tag: "v0.6.0"'
     refute_includes gemfile, 'tag: "v0.5.1"'
-    assert_includes gemfile, 'github: "bowerbird-app/flatpack", tag: "v0.1.196"'
+    assert_includes gemfile, 'github: "bowerbird-app/flatpack", tag: "v0.1.213"'
     refute_includes gemfile, "recording_studio/v3.0.0"
     refute_includes gemfile, 'tag: "v4.4.0"'
     refute_includes gemfile, 'tag: "v4.3.0"'
@@ -103,6 +111,8 @@ class RecordingStudioGoogleDriveTest < Minitest::Test
 
     assert_includes schema, 'create_table "recording_studio_access_constraints"'
     assert_includes schema, 'create_table "recording_studio_access_rules"'
+    assert_includes schema, 'create_table "recording_studio_oauth_outbound_connections"'
+    assert_includes schema, 'create_table "admin_roots"'
     assert_includes schema, "index_recording_studio_access_constraints_on_action"
     assert_includes schema, "index_recording_studio_access_rules_on_action"
     constraint_migration = Dir.glob(
@@ -157,6 +167,7 @@ class RecordingStudioGoogleDriveTest < Minitest::Test
 
     assert_includes tailwind_source, "../../../vendor/engines/flat_pack/app/components"
     assert_includes tailwind_source, "../../../vendor/engines/recording_studio/app/views"
+    assert_includes tailwind_source, "../../../vendor/engines/recording_studio_oauth/app/views"
     refute_includes tailwind_source, "vendor/bundle/**/flatpack/app/components"
     refute_includes tailwind_source, "recordingstudio-*"
     refute_includes tailwind_source, "@theme"
@@ -171,6 +182,7 @@ class RecordingStudioGoogleDriveTest < Minitest::Test
     rake_task = File.read(File.expand_path("dummy/lib/tasks/tailwindcss.rake", __dir__))
     assert_includes rake_task, "FlatPack::Engine.root"
     assert_includes rake_task, "RecordingStudio::Engine.root"
+    assert_includes rake_task, "RecordingStudioOauth::Engine.root"
     assert_includes rake_task, "tailwindcss:link_engine_sources"
   end
 
@@ -179,7 +191,10 @@ class RecordingStudioGoogleDriveTest < Minitest::Test
     initializer_source = File.read(initializer_path)
 
     assert_includes initializer_source, "config.require_recordable_declarations = true"
-    assert_includes initializer_source, "config.recordable_types = [ \"Workspace\", \"Folder\", \"Page\" ]"
+    assert_includes initializer_source, '"Workspace"'
+    assert_includes initializer_source, '"Folder"'
+    assert_includes initializer_source, '"Page"'
+    assert_includes initializer_source, '"AdminRoot"'
     refute_includes initializer_source, "config.include_children"
     refute_includes initializer_source, "config.features."
     refute_includes initializer_source, "v3"
@@ -201,13 +216,17 @@ class RecordingStudioGoogleDriveTest < Minitest::Test
     assert_includes readme, "RecordingStudioGoogleDrive::Client"
     assert_includes readme, "token_provider"
     assert_includes readme, "connection_for"
+    assert_includes readme, "Client.for"
+    assert_includes readme, "recording_studio_oauth.outbound.google_drive"
+    assert_includes readme, "client_id"
+    assert_includes readme, "client_secret"
     assert_includes readme, "ReconnectRequired"
     assert_includes readme, "client.list"
     assert_includes readme, "client.search"
     assert_includes readme, "client.download"
     assert_includes readme, "upload_file"
     assert_includes readme, "Default page size is 25."
-    refute_includes readme, "Attachable"
+    refute_includes readme, "RecordingStudioAttachable"
     refute_includes readme, "Template Demo"
     refute_includes readme, "ExampleService"
     refute_includes readme, "enable_feature_x"
@@ -217,11 +236,15 @@ class RecordingStudioGoogleDriveTest < Minitest::Test
     view_path = File.expand_path("dummy/app/views/home/index.html.erb", __dir__)
     view_source = File.read(view_path)
 
-    assert_includes view_source, 'title: "Google Drive client"'
+    assert_includes view_source, 'title: "Google Drive"'
+    assert_includes view_source, "Connect Google Drive"
+    assert_includes view_source, "Disconnect"
+    assert_includes view_source, "Reconnect"
     refute_includes view_source, "Template Demo"
     assert_includes view_source, "FlatPack::Card::Component"
     assert_includes view_source, "dummy_page_nav"
     refute_includes view_source, "FlatPack::Breadcrumb::Component"
+    refute_includes view_source, "access_token"
   end
 
   def test_dummy_docs_pages_use_minimal_flatpack_documentation_components

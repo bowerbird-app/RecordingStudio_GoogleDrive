@@ -1,25 +1,28 @@
 Rails.application.routes.draw do
   devise_for :users
 
-  # RecordingStudio engine is data/API-focused and has no browser root route.
-  # Keep legacy links working by redirecting the base path to the app home.
   get "/recording_studio", to: redirect("/"), as: nil
   mount RecordingStudio::Engine, at: "/recording_studio"
+  mount RecordingStudioAccessible::Engine, at: "/recording_studio_accessible"
+  mount RecordingStudioAccessible::Engine, at: "/admin/access", as: :recording_studio_admin_access
+  mount RecordingStudioApi::Engine, at: "/recording_studio_api"
+  mount RecordingStudioOauth::Engine, at: "/recording_studio_oauth"
+  mount RecordingStudioAttachable::Engine, at: "/recording_studio_attachable"
+  mount RecordingStudioSiteSettings::Engine, at: "/recording_studio_site_settings"
   mount RecordingStudioRootSwitchable::Engine, at: "/recording_studio_root_switchable"
 
-  # Define your application routes per the DSL in https://guides.rubyonrails.org/routing.html
+  RecordingStudioOauth::ProtectedResourceRegistry.draw_origin_well_known(self)
 
-  # Reveal health status on /up that returns 200 if the app boots with no exceptions, otherwise 500.
-  # Can be used by load balancers and uptime monitors to verify that the app is live.
+  recording_studio_admin_for :admin, at: "/admin", root_section: :root
+
   get "up" => "rails/health#show", as: :rails_health_check
-
-  # Render dynamic PWA files from app/views/pwa/* (remember to link manifest in application.html.erb)
-  # get "manifest" => "rails/pwa#manifest", as: :pwa_manifest
-  # get "service-worker" => "rails/pwa#service_worker", as: :pwa_service_worker
 
   get "docs/install", to: "docs#install", as: :docs_install
   get "docs/config", to: "docs#configuration", as: :docs_config
 
-  # Defines the root path route ("/")
+  get "fake_oauth/authorize", to: "fake_oauth#authorize"
+  post "fake_oauth/token", to: "fake_oauth#token"
+  post "fake_oauth/revoke", to: "fake_oauth#revoke"
+
   root "home#index"
 end
