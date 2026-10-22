@@ -25,7 +25,7 @@ class GoogleDriveOauthTest < ActionDispatch::IntegrationTest
   end
 
   test "home shows connect when there is no Google Drive connection" do
-    get root_path
+    get "/"
 
     assert_response :success
     assert_includes response.body, "Connect Google Drive"
@@ -46,7 +46,7 @@ class GoogleDriveOauthTest < ActionDispatch::IntegrationTest
     assert_nil session[:access_token]
     assert_nil session["refresh_token"]
 
-    get root_path
+    get "/"
     assert_response :success
     assert_includes response.body, "Disconnect"
     assert_includes response.body, "Connected"
@@ -71,7 +71,7 @@ class GoogleDriveOauthTest < ActionDispatch::IntegrationTest
       RecordingStudioGoogleDrive::TokenStore.new(root: @root_recording, actor: @user).call
     end
 
-    get root_path
+    get "/"
     assert_includes response.body, "Connect Google Drive"
 
     follow_connect!
@@ -80,7 +80,7 @@ class GoogleDriveOauthTest < ActionDispatch::IntegrationTest
     refute_equal connection.id, live.id
 
     live.update!(status: "needs_reconnect")
-    get root_path
+    get "/"
     assert_includes response.body, "Reconnect"
   end
 
@@ -130,5 +130,6 @@ class GoogleDriveOauthTest < ActionDispatch::IntegrationTest
     assert_response :redirect
     follow_redirect!
     assert_response :redirect
+    follow_redirect!
   end
 end
