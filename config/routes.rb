@@ -1,5 +1,5 @@
 # frozen_string_literal: true
 
 RecordingStudioGoogleDrive::Engine.routes.draw do
-  root "home#index"
+  # Library gem: no product screens.
 end

@@ -8,9 +8,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.1.0] - 2026-10-22
 
 ### Added
-- `RecordingStudioGoogleDrive::Client` for Drive list, metadata, download, and upload.
-- Token input through a callable or an object that responds to `access_token`.
-- `ReconnectRequired` for expired, revoked, and insufficient-scope tokens.
+- `RecordingStudioGoogleDrive::Client` for Drive list, search, metadata, download, and upload.
+- `AccessToken.new(provider)` read with `#to_s`. Callables win over `#access_token`. A raw String raises `ArgumentError`. A blank token raises `ReconnectRequired`.
+- `Page` with `entries`, `next_cursor`, and `more?`. Pass `cursor:` for the next page.
+- `DownloadedFile` with `body`, `filename`, and `content_type`.
+- `Error`, `ReconnectRequired`, and `RequestError` (`status` and `code` may be nil). HTTP 401 and `invalid_grant` map to `ReconnectRequired`.
+- `RecordingStudioGoogleDrive.configure` returns the configuration. Default page size is 25.
 
 ### Upgrade notes
 - This is the first release of `recording_studio_google_drive`. Add the gem, then build a client with a token provider. Do not add Oauth as a dependency until that gem is released.

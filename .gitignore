@@ -52,6 +52,7 @@ test/dummy/config/credentials/*.key
 *.gem
 pkg/
 coverage/
+test/dummy/coverage/
 
 # Rename script state
 .rename_state.yml

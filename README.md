@@ -1,22 +1,24 @@
 # RecordingStudio Google Drive
 
-This gem talks to the Google Drive API for Recording Studio. It lists and searches files, reads metadata, downloads files (including Google Docs export), and uploads files. It does not store OAuth tokens. It does not register as an Attachable upload source yet.
+This gem talks to the Google Drive API for Recording Studio. It lists and searches files, reads metadata, downloads files (including Google Docs export), and uploads files. It does not store OAuth tokens.
 
 ## Client
 
-Build a client with a token provider. The provider is a callable, or an object that responds to `access_token`.
+Build a client with a token provider. The provider is a callable, or an object that responds to `access_token`. A raw String is a misconfiguration. A blank token at request time raises `ReconnectRequired`.
 
 ```ruby
 client = RecordingStudioGoogleDrive::Client.new(
   token_provider: -> { "ya29.access-token" }
 )
 
-page = client.list_files(query: "brief", page_size: 25, parent_id: "root")
-page.files
-page.next_page_token
+page = client.list(parent_id: "root", page_size: 25)
+page.entries
+page.next_cursor
+page.more?
 
+page = client.search("brief", cursor: page.next_cursor)
 file = client.fetch_file("file-id")
-downloaded = client.download_file("file-id")
+downloaded = client.download("file-id")
 uploaded = client.upload_file(
   io: File.open("notes.pdf"),
   filename: "notes.pdf",
@@ -25,9 +27,9 @@ uploaded = client.upload_file(
 )
 ```
 
-`list_files` pages with `page_token` and `next_page_token`. Search is a Drive `name contains` clause. Folders are included so callers can browse. Trashed files are excluded.
+`list` and `search` return a `Page`. Ask for the next page with `cursor:`. Search is a Drive `name contains` clause. Folders are included so callers can browse. Trashed files stay out.
 
-Google Docs, Sheets, Slides, and Drawings download through Drive export. Docs and Slides become PDF. Sheets become CSV. Drawings become PNG. Other files download as binary.
+Download returns a `DownloadedFile` with `body`, `filename`, and `content_type`. Google Docs, Sheets, Slides, and Drawings go through Drive export. Docs and Slides become PDF. Sheets become CSV. Drawings become PNG. Other files download as binary.
 
 ## Token provider
 
@@ -46,7 +48,7 @@ client = RecordingStudioGoogleDrive::Client.new(token_provider: connection)
 
 ## Errors
 
-Expired, revoked, and insufficient-scope tokens raise `RecordingStudioGoogleDrive::ReconnectRequired`. Callers can turn that into a reconnect state. Other Drive failures raise `RecordingStudioGoogleDrive::RequestError`. Both inherit `RecordingStudioGoogleDrive::Error`. The mapper uses HTTP status and Google's structured error fields, not free-text message matching.
+`RecordingStudioGoogleDrive::Error` is the base. Expired, revoked, insufficient-scope, and `invalid_grant` tokens raise `ReconnectRequired`. Other Drive failures raise `RequestError`, which exposes `status` and `code`. The mapper uses HTTP status and Google's structured error code. It does not copy the response body into the message.
 
 ## Configuration
 
@@ -56,11 +58,11 @@ RecordingStudioGoogleDrive.configure do |config|
 end
 ```
 
-Default page size is 25, matching Attachable's Drive list.
+Default page size is 25.
 
 ## Later wiring
 
-A later phase registers this gem into RecordingStudio_attachable with `register_upload_provider`. Another phase places it in a Plugins directory. Those changes are out of this gem's 0.1.0.
+A later phase registers this gem as an upload source. Another phase places it in a Plugins directory. Those changes are out of this gem's 0.1.0.
 
 ## Dummy app
 

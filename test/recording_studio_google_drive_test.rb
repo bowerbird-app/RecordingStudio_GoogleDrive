@@ -15,6 +15,7 @@ class RecordingStudioGoogleDriveTest < Minitest::Test
     gemspec = File.read(File.expand_path("../recording_studio_google_drive.gemspec", __dir__))
 
     assert_includes gemspec, 'spec.add_dependency "recording_studio", "~> 4.2"'
+    assert_includes gemspec, 'spec.required_ruby_version = ">= 3.3.12"'
   end
 
   def test_gemspec_excludes_cursor_config
@@ -201,9 +202,12 @@ class RecordingStudioGoogleDriveTest < Minitest::Test
     assert_includes readme, "token_provider"
     assert_includes readme, "connection_for"
     assert_includes readme, "ReconnectRequired"
-    assert_includes readme, "list_files"
-    assert_includes readme, "download_file"
+    assert_includes readme, "client.list"
+    assert_includes readme, "client.search"
+    assert_includes readme, "client.download"
     assert_includes readme, "upload_file"
+    assert_includes readme, "Default page size is 25."
+    refute_includes readme, "Attachable"
     refute_includes readme, "Template Demo"
     refute_includes readme, "ExampleService"
     refute_includes readme, "enable_feature_x"
@@ -266,7 +270,19 @@ class RecordingStudioGoogleDriveTest < Minitest::Test
 
   def test_engine_does_not_ship_a_home_view
     view_path = File.expand_path("../app/views/recording_studio_google_drive/home/index.html.erb", __dir__)
+    controller_path = File.expand_path(
+      "../app/controllers/recording_studio_google_drive/home_controller.rb",
+      __dir__
+    )
 
     refute File.exist?(view_path)
+    refute File.exist?(controller_path)
+  end
+
+  def test_dummy_app_name_is_google_drive_demo
+    initializer = File.read(File.expand_path("dummy/config/initializers/recording_studio.rb", __dir__))
+
+    assert_includes initializer, 'config.app_name = "Google Drive Demo"'
+    refute_includes initializer, "Addon Template"
   end
 end
