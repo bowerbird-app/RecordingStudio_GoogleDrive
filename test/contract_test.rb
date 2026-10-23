@@ -107,6 +107,12 @@ class ContractTest < Minitest::Test
     assert MODULE::Client.method_defined?(:download)
   end
 
+  def test_picker_access_token_takes_root_and_actor
+    method = MODULE.method(:picker_access_token)
+
+    assert_equal [%i[keyreq root], %i[keyreq actor]], method.parameters
+  end
+
   def test_configure_returns_the_configuration
     yielded = nil
     result = MODULE.configure { |config| yielded = config }

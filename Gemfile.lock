@@ -133,7 +133,7 @@ GIT
 PATH
   remote: .
   specs:
-    recording_studio_google_drive (0.2.0)
+    recording_studio_google_drive (0.3.0)
       rails (~> 8.1.0)
       recording_studio (~> 4.2)
       recording_studio_oauth (>= 0.14.1, < 1.0)
@@ -551,7 +551,7 @@ CHECKSUMS
   recording_studio_api (0.14.0)
   recording_studio_attachable (0.15.0)
   recording_studio_cache (0.5.0)
-  recording_studio_google_drive (0.2.0)
+  recording_studio_google_drive (0.3.0)
   recording_studio_logs (0.4.1)
   recording_studio_metrics (0.5.0)
   recording_studio_oauth (0.14.1)

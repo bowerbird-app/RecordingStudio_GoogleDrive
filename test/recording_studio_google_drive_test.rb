@@ -4,7 +4,7 @@ require "test_helper"
 
 class RecordingStudioGoogleDriveTest < Minitest::Test
   def test_version_matches_release
-    assert_equal "0.2.0", ::RecordingStudioGoogleDrive::VERSION
+    assert_equal "0.3.0", ::RecordingStudioGoogleDrive::VERSION
   end
 
   def test_engine_exists
@@ -217,6 +217,8 @@ class RecordingStudioGoogleDriveTest < Minitest::Test
     assert_includes readme, "token_provider"
     assert_includes readme, "connection_for"
     assert_includes readme, "Client.for"
+    assert_includes readme, "picker_access_token"
+    assert_includes readme, "Hand it to the Picker only"
     assert_includes readme, "recording_studio_oauth.outbound.google_drive"
     assert_includes readme, "client_id"
     assert_includes readme, "client_secret"
