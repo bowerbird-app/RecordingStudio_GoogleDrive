@@ -43,7 +43,7 @@ class AttachableRegistrationTest < Minitest::Test
 
   def test_attachable_version_rejects_versions_below_minimum
     error = assert_raises(RuntimeError) do
-      RecordingStudioGoogleDrive.send(:assert_attachable_version!, "0.20.9")
+      RecordingStudioGoogleDrive.assert_attachable_version!("0.20.9")
     end
 
     assert_includes error.message, "0.21.0"
@@ -51,7 +51,7 @@ class AttachableRegistrationTest < Minitest::Test
   end
 
   def test_attachable_version_accepts_the_minimum
-    RecordingStudioGoogleDrive.send(:assert_attachable_version!, "0.21.0")
+    RecordingStudioGoogleDrive.assert_attachable_version!("0.21.0")
   end
 
   def test_engine_loads_the_attachable_addon_after_host_initializers

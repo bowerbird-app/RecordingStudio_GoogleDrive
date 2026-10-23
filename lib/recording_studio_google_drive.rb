@@ -61,8 +61,6 @@ module RecordingStudioGoogleDrive
       TokenStore.new(root: root, actor: actor).access_token
     end
 
-    private
-
     def assert_attachable_version!(version)
       required = Gem::Version.new(MINIMUM_ATTACHABLE_VERSION)
       return if Gem::Version.new(version) >= required
@@ -70,6 +68,8 @@ module RecordingStudioGoogleDrive
       raise "recording_studio_google_drive requires recording_studio_attachable >= #{required} " \
             "(got #{Gem::Version.new(version)})"
     end
+
+    private
 
     def oauth_credentials_blank?
       client_id, client_secret = resolved_oauth_credentials
