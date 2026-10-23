@@ -68,7 +68,7 @@ module RecordingStudioGoogleDrive
       )
     end
 
-    def connect_payload(*, recording:, context:)
+    def connect_payload(recording:, context:)
       Integration.connect_payload(recording: recording, context: context)
     end
 

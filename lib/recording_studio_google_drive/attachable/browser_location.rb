@@ -16,14 +16,9 @@ module RecordingStudioGoogleDrive
       end
 
       def current_path
-        crumbs = [{ name: root_name, url: url_for(ids: [], names: []) }]
-        folder_ids.each_with_index do |id, index|
-          crumbs << {
-            name: folder_names[index].presence || id,
-            url: url_for(ids: folder_ids[0..index], names: folder_names[0..index])
-          }
-        end
-        crumbs
+        return "/" if folder_ids.empty?
+
+        ([root_name] + display_folder_names).join(" / ")
       end
 
       def parent_url
@@ -60,6 +55,10 @@ module RecordingStudioGoogleDrive
 
       def url_for(ids:, names:)
         url_builder.call(ids: ids, names: names)
+      end
+
+      def display_folder_names
+        folder_ids.each_with_index.map { |id, index| folder_names[index].presence || id }
       end
     end
   end

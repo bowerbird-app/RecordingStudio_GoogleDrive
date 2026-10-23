@@ -53,7 +53,7 @@ module RecordingStudioGoogleDrive
         oauth_routes&.outbound_connection_path(connection_id, return_to: return_to)
       end
 
-      def connect_payload(*, recording:, context:)
+      def connect_payload(recording:, context:)
         helpers = context.google_drive
         {
           url: oauth_connect_path,

@@ -126,6 +126,7 @@ class AttachableRegistrationTest < Minitest::Test
     types = callable.parameters.map(&:first)
     refute_includes types, :req
     refute_includes types, :opt
+    refute_includes types, :rest
     assert types.intersect?(%i[key keyreq keyrest])
   end
 end

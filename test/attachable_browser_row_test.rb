@@ -46,6 +46,20 @@ class AttachableBrowserRowTest < Minitest::Test
     refute row.key?(:mimeType)
   end
 
+  def test_browser_location_root_path_is_slash
+    location = RecordingStudioGoogleDrive::Attachable::BrowserLocation.new(
+      folder_ids: [],
+      folder_names: [],
+      query: nil,
+      root_name: "Google Drive",
+      url_builder: ->(ids:, names:) { [ids, names].inspect }
+    )
+
+    assert_equal "/", location.current_path
+    assert_nil location.parent_url
+    assert_nil location.current_folder_id
+  end
+
   def test_browser_location_builds_crumbs_and_parent_url
     location = RecordingStudioGoogleDrive::Attachable::BrowserLocation.new(
       folder_ids: %w[a b],
@@ -58,9 +72,7 @@ class AttachableBrowserRowTest < Minitest::Test
     assert_equal "b", location.current_folder_id
     assert_equal "a:Alpha", location.parent_url
     assert_equal "a/b/c:Alpha/Beta/Gamma", location.open_folder_url(folder_file("c", "Gamma"))
-    path = location.current_path
-    assert_equal "Google Drive", path.first[:name]
-    assert_equal "Beta", path.last[:name]
+    assert_equal "Google Drive / Alpha / Beta", location.current_path
     refute location.query_params.key?(:query)
     assert_equal %w[a b], location.query_params[:folder_ids]
 

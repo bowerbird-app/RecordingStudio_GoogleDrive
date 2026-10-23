@@ -105,6 +105,28 @@ class GoogleDriveAttachableTest < ActionDispatch::IntegrationTest
     refute_includes response.body, "fake-access-"
   end
 
+  test "imports index lists a nested folder by folder_ids" do
+    follow_connect!
+
+    listed = nil
+    client = import_client
+    client.define_singleton_method(:list) do |**kwargs|
+      listed = kwargs
+      RecordingStudioGoogleDrive::Page.new(entries: [], next_cursor: nil)
+    end
+
+    with_drive_client(client) do
+      get google_drive.recording_imports_path(
+        @recording,
+        folder_ids: ["folder-1"],
+        folder_names: ["Briefs"]
+      )
+      assert_response :success
+    end
+
+    assert_equal "folder-1", listed[:parent_id]
+  end
+
   test "connected import copies a selected file through ImportRemoteFiles" do
     follow_connect!
 

@@ -99,7 +99,7 @@ end
 
 Oauth `client_id` and `client_secret` stay on `recording_studio_oauth.outbound.google_drive`. Name the keys. Do not put the values in git.
 
-The add-on registers `:google_drive` with `register_upload_provider` (`connect:`, `reconnect_error:`). Controllers inherit `RecordingStudioAttachable::ProviderController`. Imports go through `RecordingStudioAttachable::Services::ImportRemoteFiles`. Connect JSON uses `ProviderConnect.payload`. Drive-only copy such as `picker_requires_config` lives in this gem's locale file.
+The add-on registers `:google_drive` with `register_upload_provider` (`connect:`, `reconnect_error:`). Those callables take keyword arguments only. Auth is `needs_auth` on bootstrap. Connect is the recipe, not the auth signal. HTML browse rows use `content_type`, `kind: :file` / `:folder`, `open_url`, a `current_path` string, and `parent_url`. Controllers inherit `RecordingStudioAttachable::ProviderController`. Imports go through `RecordingStudioAttachable::Services::ImportRemoteFiles`. Connect JSON uses `ProviderConnect.payload`. Drive-only copy such as `picker_requires_config` lives in this gem's locale file. Adapter routes register once for `:google_drive`.
 
 Import-only hosts can set `config.scopes` to `RecordingStudioGoogleDrive::AttachableConfiguration::DEFAULT_SCOPES` (`https://www.googleapis.com/auth/drive.readonly`).
 
