@@ -4,7 +4,6 @@ import {
   providerNeedsAuth,
   openProviderAuth,
   hideProviderContinueButton,
-  showProviderContinueButton,
   registerUploadProviderLauncher
 } from "recording_studio_attachable/provider_launchers"
 
@@ -140,13 +139,6 @@ registerUploadProviderLauncher("google_drive", {
 
     if (providerNeedsAuth(bootstrap)) {
       if (gesture) openProviderAuth(controller, bootstrap, providerKey)
-      return
-    }
-
-    if (!gesture) {
-      showProviderContinueButton(controller, button, "Open Google Drive picker", () => {
-        openPickerNow(controller, providerKey, bootstrap)
-      })
       return
     }
 

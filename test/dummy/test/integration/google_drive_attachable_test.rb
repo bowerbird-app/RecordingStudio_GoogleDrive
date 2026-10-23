@@ -70,6 +70,17 @@ class GoogleDriveAttachableTest < ActionDispatch::IntegrationTest
     assert_nil session["access_token"]
   end
 
+  test "connected popup page notifies the opener with a same-origin postMessage" do
+    get google_drive.recording_connected_path(@recording, popup: 1)
+
+    assert_response :success
+    assert_includes response.body, 'target.postMessage(payload, window.location.origin)'
+    assert_includes response.body, "provider-auth-complete"
+    assert_includes response.body, "google_drive"
+    assert_includes response.body, "window.close()"
+    refute_includes response.body, "postMessage(payload, \"*\")"
+  end
+
   test "bootstrap returns picker token when connected" do
     follow_connect!
 

@@ -9,12 +9,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 ### Added
 - Optional Attachable upload add-on. When `RecordingStudioAttachable` `>= 0.21.0` is present and `config.attachable.enabled` is true, this gem registers `:google_drive` with Attachable's public provider hooks. Attachable is not a gemspec dependency. Dummy and CI pin Attachable to tag `v0.21.0`.
 - Attachable settings live on this gem: `RecordingStudioGoogleDrive.configure { |c| c.attachable.api_key = ... }`. Keys are `enabled`, `api_key`, `app_id`, and `page_size`.
-- Google Picker launcher JS ships here and imports helpers from `recording_studio_attachable/provider_launchers`. Auth is `providerNeedsAuth` / `needs_auth` only. Connect is the recipe, not the auth signal. The Picker opens only from a user click.
+- Google Picker launcher JS ships here and imports helpers from `recording_studio_attachable/provider_launchers`. Auth is `providerNeedsAuth` / `needs_auth` only. Connect is the recipe, not the auth signal. One click opens Connect when Drive needs auth. After the connect popup returns, the opener refreshes bootstrap and opens the Picker.
 - HTML Drive browse rows use generic `content_type` and `kind: :file` / `:folder` with `open_url`, a `current_path` string, and `parent_url`. `connect` and `remote_importer` take keyword arguments only.
 - `Client#search` takes `parent_id:` so a search can stay inside a folder.
 
 ### Fixed
 - Oauth outbound registration is skipped only when both `client_id` and `client_secret` are blank (this gem's config or `recording_studio_oauth.outbound.google_drive` credentials). Hosts without Drive credentials boot instead of raising `client_id is required`. Other `register_outbound_provider` errors still raise.
+- After a successful Drive connect popup (`connected?popup=1`), the connected page notifies the opener and the Picker opens. You do not click Google Drive a second time.
 
 ### Upgrade notes
 - Hosts that used Attachable's in-tree Drive keep the same mount path (`/recording_studio_attachable/google_drive`) and `google_drive_*` route helpers. Remove Attachable `config.google_drive.*` and set this gem's `config.attachable.*` instead.
