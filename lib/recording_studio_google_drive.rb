@@ -20,6 +20,10 @@ require "recording_studio_google_drive/client"
 require "recording_studio_google_drive/configuration"
 require "recording_studio_google_drive/engine"
 
+ActiveSupport.on_load(:recording_studio_attachable) do
+  require "recording_studio_google_drive/attachable"
+end
+
 module RecordingStudioGoogleDrive
   class << self
     def configuration

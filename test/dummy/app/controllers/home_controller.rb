@@ -4,6 +4,7 @@ class HomeController < ApplicationController
   def index
     @drive_connection = drive_connection
     @drive_ready = drive_ready?
+    @upload_recording = demo_page_recording
   end
 
   private
@@ -30,6 +31,13 @@ class HomeController < ApplicationController
     return if workspace.nil?
 
     RecordingStudio.root_recording_for(workspace)
+  end
+
+  def demo_page_recording
+    page = Page.order(:title).first
+    return if page.nil?
+
+    RecordingStudio::Recording.find_by(recordable: page)
   end
 
   def provider_key

@@ -61,7 +61,7 @@ begin
   admin_recording = RecordingStudio.root_recording_for(admin_root)
 
   folder_recording = find_or_record_child.call(folder, root_recording, root_recording)
-  find_or_record_child.call(page, root_recording, folder_recording)
+  page_recording = find_or_record_child.call(page, root_recording, folder_recording)
 
   grant_or_find_access.call(root_recording, user, :admin)
   grant_or_find_access.call(accessible_root_recording, user, :admin)
@@ -76,3 +76,4 @@ puts "Seeded: Workspace '#{accessible_workspace.name}' with root recording ##{ac
 puts "Seeded: Workspace '#{private_workspace.name}' with root recording ##{private_root_recording.id}"
 puts "Seeded: Folder '#{folder.name}' and page '#{page.title}'"
 puts "Seeded: Admin root for staff screens"
+puts "Upload page: /recording_studio_attachable/recordings/#{page_recording.id}/attachments/upload"

@@ -15,11 +15,12 @@ module RecordingStudioGoogleDrive
 
     attr_accessor :page_size, :oauth_provider_key, :authorize_url, :token_url, :revoke_url,
                   :scopes, :pkce, :refresh, :extra_authorize_params, :client_id, :client_secret, :http
-    attr_reader :hooks
+    attr_reader :hooks, :attachable
 
     def initialize
       apply_client_defaults
       apply_oauth_defaults
+      @attachable = AttachableConfiguration.new
       @hooks = RecordingStudio::Hooks.new
     end
 
@@ -35,6 +36,11 @@ module RecordingStudioGoogleDrive
       raise ArgumentError, "Google Drive configuration must be a hash" unless hash.is_a?(Hash)
 
       hash.each do |key, value|
+        if key.to_s == "attachable"
+          attachable.merge!(value)
+          next
+        end
+
         setter = "#{key}="
         raise ArgumentError, "unknown Google Drive configuration key: #{key}" unless respond_to?(setter)
 
@@ -95,6 +101,56 @@ module RecordingStudioGoogleDrive
       attrs[:http] = http if http
       attrs
     end
+
+    def present_credential?(value)
+      value.respond_to?(:to_s) && value.to_s.strip != ""
+    end
+  end
+
+  class AttachableConfiguration
+    DEFAULT_SCOPES = ["https://www.googleapis.com/auth/drive.readonly"].freeze
+
+    attr_accessor :enabled, :api_key, :app_id, :page_size
+
+    def initialize
+      @enabled = false
+      @api_key = nil
+      @app_id = nil
+      @page_size = Configuration::DEFAULT_PAGE_SIZE
+    end
+
+    def enabled?
+      enabled == true
+    end
+
+    def picker_configured?
+      present_credential?(api_key) && present_credential?(app_id)
+    end
+
+    def available?
+      enabled? && picker_configured?
+    end
+
+    def merge!(hash)
+      raise ArgumentError, "Google Drive attachable configuration must be a hash" unless hash.is_a?(Hash)
+
+      hash.each do |key, value|
+        setter = "#{key}="
+        raise ArgumentError, "unknown Google Drive attachable configuration key: #{key}" unless respond_to?(setter)
+
+        public_send(setter, value)
+      end
+    end
+
+    def inspect
+      "#<#{self.class.name} enabled=#{enabled.inspect} " \
+        "api_key=#{present_credential?(api_key) ? '[FILTERED]' : 'nil'} " \
+        "app_id=#{present_credential?(app_id) ? '[FILTERED]' : 'nil'} page_size=#{page_size.inspect}>"
+    end
+
+    alias to_s inspect
+
+    private
 
     def present_credential?(value)
       value.respond_to?(:to_s) && value.to_s.strip != ""

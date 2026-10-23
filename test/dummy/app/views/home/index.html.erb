@@ -37,6 +37,14 @@
             <%= render FlatPack::Button::Component.new(text: "Disconnect", style: :secondary, size: :md, type: "submit") %>
           <% end %>
         <% end %>
+        <% if @upload_recording %>
+          <%= render FlatPack::Button::Component.new(
+            text: "Upload to Getting Started",
+            style: :secondary,
+            size: :md,
+            url: recording_studio_attachable.recording_attachment_upload_path(@upload_recording)
+          ) %>
+        <% end %>
       </div>
     <% end %>
   <% end %>

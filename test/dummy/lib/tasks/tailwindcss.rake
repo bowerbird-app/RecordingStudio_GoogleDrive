@@ -9,7 +9,8 @@ namespace :tailwindcss do
     {
       "flat_pack" => FlatPack::Engine.root,
       "recording_studio" => RecordingStudio::Engine.root,
-      "recording_studio_oauth" => RecordingStudioOauth::Engine.root
+      "recording_studio_oauth" => RecordingStudioOauth::Engine.root,
+      "recording_studio_attachable" => RecordingStudioAttachable::Engine.root
     }.each do |name, engine_root|
       link = destination.join(name)
       target = Pathname.new(engine_root).realpath

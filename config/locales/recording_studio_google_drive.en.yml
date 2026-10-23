@@ -1,0 +1,4 @@
+en:
+  recording_studio:
+    google_drive:
+      picker_requires_config: "Google Drive picker needs an API key and app id"

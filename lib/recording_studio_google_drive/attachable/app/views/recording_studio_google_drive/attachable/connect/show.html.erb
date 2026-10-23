@@ -1,0 +1,7 @@
+<%= render "recording_studio_attachable/providers/connect_form",
+           provider_label: provider_label,
+           reconnect: @reconnect,
+           auto_submit: params[:popup].to_s == "1",
+           connect_url: oauth_connect_path,
+           method: :post,
+           fields: connect_form_fields %>

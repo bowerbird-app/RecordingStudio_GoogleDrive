@@ -79,13 +79,49 @@ end
 
 Default page size is 25. Dummy and tests point authorize, token, and revoke URLs at a local fake provider so they never call Google.
 
+## Attachable upload add-on
+
+This gem owns Google Drive import for Recording Studio Attachable. Attachable stays provider-neutral. The add-on loads only when `RecordingStudioAttachable` is present.
+
+1. Add `recording_studio_attachable` `>= 0.21.0, < 1.0` and this gem. Until Attachable 0.21.0 is tagged, pin Attachable to git ref `3d3dadc9072768dba4a5a993aefaddfbe85f4502`.
+2. Enable Attachable on the recordable types that should accept files.
+3. Mount Attachable. This gem registers adapter routes at `/google_drive` (`as: :google_drive`), so host URLs and route helpers stay the same as Attachable's old in-tree Drive.
+4. Pin importmap modules `recording_studio_attachable/provider_launchers` and `recording_studio_google_drive/google_drive_picker_launcher`.
+5. Configure the picker:
+
+```ruby
+RecordingStudioGoogleDrive.configure do |config|
+  config.attachable.enabled = true
+  config.attachable.api_key = Rails.application.credentials.dig(:google_drive, :api_key)
+  config.attachable.app_id = Rails.application.credentials.dig(:google_drive, :app_id)
+end
+```
+
+Oauth `client_id` and `client_secret` stay on `recording_studio_oauth.outbound.google_drive`. Name the keys. Do not put the values in git.
+
+The add-on registers `:google_drive` with `register_upload_provider` (`connect:`, `reconnect_error:`). Controllers inherit `RecordingStudioAttachable::ProviderController`. Imports go through `RecordingStudioAttachable::Services::ImportRemoteFiles`. Connect JSON uses `ProviderConnect.payload`. Drive-only copy such as `picker_requires_config` lives in this gem's locale file.
+
+Import-only hosts can set `config.scopes` to `RecordingStudioGoogleDrive::AttachableConfiguration::DEFAULT_SCOPES` (`https://www.googleapis.com/auth/drive.readonly`).
+
 ## Dummy app
 
-`test/dummy/` is a host that boots Recording Studio and Oauth. Sign in at `/users/sign_in` with `admin@admin.com` / `Password`. The home page Connects, Disconnects, and Reconnects Google Drive through Oauth's outbound flow. Dummy registers the same `:google_drive` provider against `/fake_oauth/*`, not real Google credentials.
+`test/dummy/` is a host that boots Recording Studio, Oauth, Attachable, and this add-on. Sign in at `/users/sign_in` with `admin@admin.com` / `Password`. The home page Connects, Disconnects, and Reconnects Google Drive through Oauth's outbound flow.
+
+Boot the dummy from `test/dummy`:
+
+```bash
+bundle install
+bin/rails db:setup
+bin/dev
+```
+
+Without Google secrets, dummy uses `/fake_oauth/*`. For a real Drive import in the browser, set Rails credentials `attachable.google_drive.*` or `google_drive.*` (`client_id`, `client_secret`, `api_key`, `app_id`), or the ENV vars `GOOGLE_DRIVE_CLIENT_ID`, `GOOGLE_DRIVE_CLIENT_SECRET`, `GOOGLE_DRIVE_API_KEY`, and `GOOGLE_DRIVE_APP_ID`. `RAILS_DEVELOPMENT_HOSTS` adds allowed hosts.
+
+After seed, open `/recording_studio_attachable/recordings/<page-recording-id>/attachments/upload` on the seeded Getting Started page. Seeds print that path.
 
 ## Development
 
-Ruby 3.3.12. Rails 8.1. Recording Studio `~> 4.2` (dummy GitHub tag `v4.7.0`). Oauth `>= 0.14.1, < 1.0` (dummy GitHub tag `v0.14.1`).
+Ruby 3.3.12. Rails 8.1. Recording Studio `~> 4.2` (dummy GitHub tag `v4.7.0`). Oauth `>= 0.14.1, < 1.0` (dummy GitHub tag `v0.14.1`). Attachable `>= 0.21.0, < 1.0` (dummy git ref `3d3dadc9072768dba4a5a993aefaddfbe85f4502`).
 
 ```bash
 bundle install

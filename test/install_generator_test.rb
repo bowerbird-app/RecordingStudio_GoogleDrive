@@ -45,6 +45,8 @@ class InstallGeneratorTest < Minitest::Test
 
     assert_includes install_guide, "Client.for"
     assert_includes install_guide, "client_id"
+    assert_includes install_guide, "config.attachable.enabled"
+    assert_includes install_guide, "google_drive_picker_launcher"
     refute_includes install_guide, "tailwindcss:build"
     refute_includes install_guide, "Addon Template"
     refute File.exist?(
