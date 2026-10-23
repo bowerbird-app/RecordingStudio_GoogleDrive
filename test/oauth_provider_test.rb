@@ -58,19 +58,22 @@ class OauthProviderTest < Minitest::Test
     ].each do |client_id, client_secret, message|
       RecordingStudioGoogleDrive.configuration.client_id = client_id
       RecordingStudioGoogleDrive.configuration.client_secret = client_secret
-      registered = false
+      registered = 0
       Rails.stub(:application, blank_rails_credentials_app) do
         error = assert_raises(ArgumentError) do
           RecordingStudioOauth.stub(
             :register_outbound_provider,
-            ->(**) { registered = true; raise ArgumentError, message }
+            lambda { |**|
+              registered += 1
+              raise ArgumentError, message
+            }
           ) do
             RecordingStudioGoogleDrive.register_oauth_provider!
           end
         end
 
         assert_equal message, error.message
-        assert registered
+        assert_equal 1, registered
       end
     end
   end
