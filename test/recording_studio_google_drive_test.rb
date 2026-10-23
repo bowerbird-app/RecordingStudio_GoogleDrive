@@ -4,7 +4,7 @@ require "test_helper"
 
 class RecordingStudioGoogleDriveTest < Minitest::Test
   def test_version_matches_release
-    assert_equal "0.3.0", ::RecordingStudioGoogleDrive::VERSION
+    assert_equal "0.4.0", ::RecordingStudioGoogleDrive::VERSION
   end
 
   def test_engine_exists
@@ -14,8 +14,13 @@ class RecordingStudioGoogleDriveTest < Minitest::Test
   def test_gemspec_pins_recording_studio_4_2
     gemspec = File.read(File.expand_path("../recording_studio_google_drive.gemspec", __dir__))
 
+    gemfile = File.read(File.expand_path("../Gemfile", __dir__))
+
     assert_includes gemspec, 'spec.add_dependency "recording_studio", "~> 4.2"'
     assert_includes gemspec, 'spec.add_dependency "recording_studio_oauth", ">= 0.14.1", "< 1.0"'
+    refute_includes gemspec, "recording_studio_attachable"
+    assert_includes gemfile, "recording_studio_attachable"
+    assert_includes gemfile, 'tag: "v0.21.0"'
     assert_includes gemspec, 'spec.required_ruby_version = ">= 3.3.0"'
   end
 
@@ -60,7 +65,8 @@ class RecordingStudioGoogleDriveTest < Minitest::Test
     assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_root_switchable", tag: "v0.9.0"'
     assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_cache", tag: "v0.5.0"'
     assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_metrics", tag: "v0.5.0"'
-    assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_attachable", tag: "v0.15.0"'
+    assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_attachable",'
+    assert_includes gemfile, 'tag: "v0.21.0"'
     assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_logs", tag: "v0.4.1"'
     assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_site_settings", tag: "v0.2.0"'
     assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_api", tag: "v0.14.0"'
@@ -112,6 +118,7 @@ class RecordingStudioGoogleDriveTest < Minitest::Test
     assert_includes schema, 'create_table "recording_studio_access_constraints"'
     assert_includes schema, 'create_table "recording_studio_access_rules"'
     assert_includes schema, 'create_table "recording_studio_oauth_outbound_connections"'
+    assert_includes schema, 'create_table "active_storage_blobs"'
     assert_includes schema, 'create_table "admin_roots"'
     assert_includes schema, "index_recording_studio_access_constraints_on_action"
     assert_includes schema, "index_recording_studio_access_rules_on_action"
@@ -195,6 +202,9 @@ class RecordingStudioGoogleDriveTest < Minitest::Test
     assert_includes initializer_source, '"Folder"'
     assert_includes initializer_source, '"Page"'
     assert_includes initializer_source, '"AdminRoot"'
+    assert_includes initializer_source, '"RecordingStudioAttachable::Attachment"'
+    refute_includes initializer_source, "RecordingStudioAttachable::Library"
+    refute_includes initializer_source, "RecordingStudioAttachable::Placement"
     refute_includes initializer_source, "config.include_children"
     refute_includes initializer_source, "config.features."
     refute_includes initializer_source, "v3"
@@ -228,7 +238,15 @@ class RecordingStudioGoogleDriveTest < Minitest::Test
     assert_includes readme, "client.download"
     assert_includes readme, "upload_file"
     assert_includes readme, "Default page size is 25."
-    refute_includes readme, "RecordingStudioAttachable"
+    assert_includes readme, "RecordingStudioAttachable"
+    assert_includes readme, "config.attachable.enabled"
+    assert_includes readme, "config.attachable.api_key"
+    assert_includes readme, "register_upload_provider"
+    assert_includes readme, "ProviderController"
+    assert_includes readme, "ImportRemoteFiles"
+    assert_includes readme, "ProviderConnect.payload"
+    assert_includes readme, "recording_studio_attachable/provider_launchers"
+    assert_includes readme, "/recording_studio_attachable/recordings/"
     refute_includes readme, "Template Demo"
     refute_includes readme, "ExampleService"
     refute_includes readme, "enable_feature_x"
@@ -242,6 +260,7 @@ class RecordingStudioGoogleDriveTest < Minitest::Test
     assert_includes view_source, "Connect Google Drive"
     assert_includes view_source, "Disconnect"
     assert_includes view_source, "Reconnect"
+    assert_includes view_source, "Upload to Getting Started"
     refute_includes view_source, "Template Demo"
     assert_includes view_source, "FlatPack::Card::Component"
     assert_includes view_source, "dummy_page_nav"

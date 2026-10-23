@@ -99,7 +99,7 @@ class ContractTest < Minitest::Test
     upload = MODULE::Client.instance_method(:upload_file)
 
     assert_equal [%i[key parent_id], %i[key cursor], %i[key page_size]], list.parameters
-    assert_equal [%i[keyreq query], %i[key cursor], %i[key page_size]], search.parameters
+    assert_equal [%i[keyreq query], %i[key cursor], %i[key page_size], %i[key parent_id]], search.parameters
     assert_equal(
       [%i[keyreq io], %i[keyreq filename], %i[keyreq content_type], %i[key parent_id]],
       upload.parameters

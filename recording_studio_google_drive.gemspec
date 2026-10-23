@@ -9,7 +9,8 @@ Gem::Specification.new do |spec|
   spec.homepage    = "https://github.com/bowerbird-app/RecordingStudio_GoogleDrive"
   spec.summary     = "Google Drive API client for Recording Studio"
   spec.description = "Lists, downloads, and uploads Google Drive files for Recording Studio. " \
-                     "Reads access tokens from Recording Studio Oauth outbound connections."
+                     "Reads access tokens from Recording Studio Oauth outbound connections. " \
+                     "Registers an optional Attachable upload provider when Attachable is present."
   spec.license     = "MIT"
   spec.required_ruby_version = ">= 3.3.0"
 

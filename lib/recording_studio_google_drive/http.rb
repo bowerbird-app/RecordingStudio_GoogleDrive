@@ -21,10 +21,14 @@ module RecordingStudioGoogleDrive
       parse_json_object(response.body)
     end
 
-    def get_bytes(path, params = {})
-      response = @transport.get(uri_for(API_ROOT, path, params), follow_cross_host: true)
-      raise_unless_success(response)
-      response.body
+    def get_bytes(path, params = {}, max_bytes: nil)
+      response, body = @transport.get_bytes(
+        uri_for(API_ROOT, path, params),
+        follow_cross_host: true,
+        max_bytes: max_bytes
+      )
+      raise_unless_success(response, body)
+      body
     end
 
     def post_multipart(path, params:, metadata:, body:, content_type:)
@@ -61,10 +65,10 @@ module RecordingStudioGoogleDrive
       uri
     end
 
-    def raise_unless_success(response)
+    def raise_unless_success(response, body = response.body)
       return if response.is_a?(Net::HTTPSuccess)
 
-      raise ErrorMapper.from_response(response, response.body)
+      raise ErrorMapper.from_response(response, body)
     end
 
     def parse_json_object(raw)

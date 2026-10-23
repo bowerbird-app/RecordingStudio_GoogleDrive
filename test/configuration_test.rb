@@ -52,6 +52,39 @@ class ConfigurationTest < Minitest::Test
     refute_respond_to @configuration, :timeout
   end
 
+  def test_attachable_defaults_are_off_and_unconfigured
+    attachable = @configuration.attachable
+
+    refute_predicate attachable, :enabled?
+    refute_predicate attachable, :picker_configured?
+    assert_equal 25, attachable.page_size
+    assert_equal ["https://www.googleapis.com/auth/drive.readonly"],
+                 RecordingStudioGoogleDrive::AttachableConfiguration::DEFAULT_SCOPES
+  end
+
+  def test_merge_updates_nested_attachable_settings
+    @configuration.merge!(
+      attachable: { enabled: true, api_key: "picker-key", app_id: "123456", page_size: 10 }
+    )
+    attachable = @configuration.attachable
+
+    assert_predicate attachable, :enabled?
+    assert_predicate attachable, :picker_configured?
+    assert_equal "picker-key", attachable.api_key
+    assert_equal "123456", attachable.app_id
+    assert_equal 10, attachable.page_size
+  end
+
+  def test_attachable_inspect_redacts_picker_secrets
+    @configuration.attachable.api_key = "super-secret-picker-key"
+    @configuration.attachable.app_id = "super-secret-app-id"
+
+    refute_includes @configuration.attachable.inspect, "super-secret-picker-key"
+    refute_includes @configuration.attachable.inspect, "super-secret-app-id"
+    assert_includes @configuration.attachable.inspect, "api_key=[FILTERED]"
+    assert_includes @configuration.attachable.inspect, "app_id=[FILTERED]"
+  end
+
   def test_inspect_and_to_s_redact_client_secret
     secret = "dummy-fake-drive-secret"
     @configuration.client_secret = secret

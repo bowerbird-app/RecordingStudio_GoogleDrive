@@ -1,0 +1,27 @@
+<% next_page_url = nil %>
+<% if @next_page_token.present? %>
+  <% next_page_url = google_drive.recording_imports_path(
+       @recording,
+       **(@browse_query || {}),
+       page_token: @next_page_token
+     ) %>
+<% end %>
+
+<%= render "recording_studio_attachable/providers/remote_file_browser",
+           provider_label: provider_label,
+           reconnect: @reconnect,
+           show_connect: @show_connect,
+           connect_url: oauth_connect_path,
+           connect_method: :post,
+           connect_fields: connect_form_fields,
+           files: @files,
+           query: @query,
+           current_path: @current_path,
+           parent_url: @parent_url,
+           path: @path,
+           next_page_url: next_page_url,
+           import_url: google_drive.recording_imports_path(@recording, **(@browse_query || {})),
+           search_url: google_drive.recording_imports_path(@recording, **(@browse_query || {})),
+           disconnect_url: google_drive.recording_disconnect_path(@recording),
+           recording: @recording,
+           flow_params: upload_flow_params %>

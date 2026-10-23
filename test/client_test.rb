@@ -74,6 +74,17 @@ class ClientTest < Minitest::Test
     assert_equal "trashed = false and 'root' in parents", query_params(requests.first.uri).fetch("q")
   end
 
+  def test_search_can_stay_inside_a_parent_folder
+    requests = stub_list_page("files" => [])
+
+    client.search(query: "brief", parent_id: "folder-1")
+
+    assert_equal(
+      "trashed = false and 'folder-1' in parents and name contains 'brief'",
+      query_params(requests.first.uri).fetch("q")
+    )
+  end
+
   def test_fetch_file_returns_metadata_and_encodes_the_id
     stub_request(:get, %r{https://www.googleapis.com/drive/v3/files/file%2F1})
       .to_return(json_http(
@@ -95,6 +106,93 @@ class ClientTest < Minitest::Test
       params = query_params(request.uri)
       params["resourceKey"] == "rk-1" && params["supportsAllDrives"] == "true"
     end
+  end
+
+  def test_list_follows_a_same_host_redirect
+    stub_request(:get, %r{https://www.googleapis.com/drive/v3/files})
+      .to_return(
+        status: 302,
+        headers: { "Location" => "https://www.googleapis.com/drive/v3/files?pageToken=next" }
+      ).then.to_return(json_http(files: [{ "id" => "a", "name" => "One", "mimeType" => "text/plain" }]))
+
+    page = client.list
+
+    assert_equal ["a"], page.entries.map(&:id)
+  end
+
+  def test_list_refuses_a_cross_host_json_redirect
+    stub_request(:get, %r{https://www.googleapis.com/drive/v3/files})
+      .to_return(status: 302, headers: { "Location" => "https://evil.test/steal" })
+
+    error = assert_raises(RecordingStudioGoogleDrive::RequestError) { client.list }
+
+    assert_includes error.message, "cross-host redirect"
+  end
+
+  def test_download_error_body_is_read_when_capped
+    stub_request(:get, "https://www.googleapis.com/drive/v3/files/file-1")
+      .with(query: hash_including("fields"))
+      .to_return(json_http(id: "file-1", name: "Preview.png", mimeType: "image/png", size: "4"))
+    stub_request(:get, "https://www.googleapis.com/drive/v3/files/file-1")
+      .with(query: hash_including("alt" => "media"))
+      .to_return(status: 500, body: { error: { status: "INTERNAL" } }.to_json)
+
+    error = assert_raises(RecordingStudioGoogleDrive::RequestError) { client.download("file-1", max_bytes: 100) }
+
+    assert_equal 500, error.status
+  end
+
+  def test_download_redirect_without_location_is_not_success
+    stub_request(:get, "https://www.googleapis.com/drive/v3/files/file-1")
+      .with(query: hash_including("fields"))
+      .to_return(json_http(id: "file-1", name: "Preview.png", mimeType: "image/png", size: "4"))
+    stub_request(:get, "https://www.googleapis.com/drive/v3/files/file-1")
+      .with(query: hash_including("alt" => "media"))
+      .to_return(status: 302, body: "moved")
+
+    error = assert_raises(RecordingStudioGoogleDrive::RequestError) { client.download("file-1", max_bytes: 100) }
+
+    refute_kind_of RecordingStudioGoogleDrive::ReconnectRequired, error
+  end
+
+  def test_download_rejects_metadata_over_max_bytes_before_media
+    stub_request(:get, "https://www.googleapis.com/drive/v3/files/file-1")
+      .with(query: hash_including("fields"))
+      .to_return(json_http(id: "file-1", name: "Huge.bin", mimeType: "application/octet-stream", size: "50"))
+    media = stub_request(:get, "https://www.googleapis.com/drive/v3/files/file-1")
+            .with(query: hash_including("alt" => "media"))
+            .to_return(status: 200, body: "x" * 50)
+
+    error = assert_raises(ArgumentError) { client.download("file-1", max_bytes: 10) }
+
+    assert_includes error.message, "maximum file size"
+    assert_not_requested(media)
+  end
+
+  def test_download_aborts_oversize_export_when_metadata_size_is_missing
+    stub_request(:get, "https://www.googleapis.com/drive/v3/files/doc-1")
+      .with(query: hash_including("fields"))
+      .to_return(json_http(id: "doc-1", name: "Project brief", mimeType: "application/vnd.google-apps.document"))
+    stub_request(:get, "https://www.googleapis.com/drive/v3/files/doc-1/export")
+      .with(query: hash_including("mimeType" => "application/pdf"))
+      .to_return(status: 200, headers: { "Content-Length" => "40" }, body: "P" * 40)
+
+    error = assert_raises(ArgumentError) { client.download("doc-1", max_bytes: 12) }
+
+    assert_includes error.message, "maximum file size"
+  end
+
+  def test_download_keeps_capped_binary_body
+    stub_request(:get, "https://www.googleapis.com/drive/v3/files/file-1")
+      .with(query: hash_including("fields"))
+      .to_return(json_http(id: "file-1", name: "Preview.png", mimeType: "image/png", size: "11"))
+    stub_request(:get, "https://www.googleapis.com/drive/v3/files/file-1")
+      .with(query: hash_including("alt" => "media"))
+      .to_return(status: 200, body: "image-bytes")
+
+    downloaded = client.download("file-1", max_bytes: 11)
+
+    assert_equal "image-bytes", downloaded.body
   end
 
   def test_download_exports_google_docs_to_pdf

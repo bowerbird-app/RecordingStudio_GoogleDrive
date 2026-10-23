@@ -28,9 +28,22 @@ module RecordingStudioGoogleDrive
       RecordingStudioGoogleDrive.configuration.hooks.run(:after_initialize, self)
     end
 
+    initializer "recording_studio_google_drive.assets" do |app|
+      app.config.assets.paths << root.join("app/javascript")
+    end
+
     initializer "recording_studio_google_drive.register_oauth_provider",
                 after: :load_config_initializers do
       RecordingStudioGoogleDrive.register_oauth_provider!
+    end
+
+    initializer "recording_studio_google_drive.load_attachable_addon",
+                after: :load_config_initializers,
+                before: "recording_studio_attachable.adapter_routes" do
+      ActiveSupport.on_load(:recording_studio_attachable) do
+        RecordingStudioGoogleDrive::Attachable.register_adapter_routes!
+        RecordingStudioGoogleDrive::Attachable.register_upload_provider!
+      end
     end
   end
 end

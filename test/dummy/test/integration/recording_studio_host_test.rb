@@ -29,6 +29,7 @@ class RecordingStudioHostTest < ActiveSupport::TestCase
 
     assert connection.column_exists?(:recording_studio_recordings, :root_recording_id)
     assert connection.table_exists?(:recording_studio_accesses)
+    assert connection.table_exists?(:active_storage_blobs)
     assert connection.table_exists?(:recording_studio_access_constraints)
     assert connection.table_exists?(:recording_studio_access_rules)
     refute connection.table_exists?(:recording_studio_access_boundaries)
@@ -60,6 +61,8 @@ class RecordingStudioHostTest < ActiveSupport::TestCase
     assert_equal folder_recording, page_recording.parent_recording
     assert_equal root_recording, page_recording.root_recording
     assert_equal 3, Workspace.count
+    assert_includes File.read(Rails.root.join("db/seeds.rb")),
+                    "/recording_studio_attachable/recordings/\#{page_recording.id}/attachments/upload"
 
     assert_no_difference -> { User.count } do
       assert_no_difference -> { RecordingStudio::Recording.count } do
@@ -78,6 +81,7 @@ class RecordingStudioHostTest < ActiveSupport::TestCase
     assert RecordingStudio.capability_enabled?(:accessible, for: Workspace)
     refute RecordingStudio.capability_enabled?(:accessible, for: Folder)
     refute RecordingStudio.capability_enabled?(:accessible, for: Page)
+    assert RecordingStudio.capability_enabled?(:attachable, for: Page)
     assert_includes ApplicationController.ancestors, RecordingStudio::UsesDefaultLayout
   end
 end
