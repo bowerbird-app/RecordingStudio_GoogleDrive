@@ -13,7 +13,7 @@ gem "recording_studio_admin", github: "bowerbird-app/RecordingStudio_admin", tag
 gem "recording_studio_api", github: "bowerbird-app/RecordingStudio_api", tag: "v0.14.0"
 gem "recording_studio_attachable",
     github: "bowerbird-app/RecordingStudio_attachable",
-    ref: "d1b22357f6d9594f26a2db009ecb8782c4eac7e4"
+    ref: "900cc3a169e26f0e4604e1acb3cbc1d81281aa87"
 gem "recording_studio_cache", github: "bowerbird-app/RecordingStudio_cache", tag: "v0.5.0"
 gem "recording_studio_logs", github: "bowerbird-app/RecordingStudio_logs", tag: "v0.4.1"
 gem "recording_studio_metrics", github: "bowerbird-app/RecordingStudio_metrics", tag: "v0.5.0"
