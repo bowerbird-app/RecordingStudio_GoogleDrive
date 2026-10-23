@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.0] - 2026-10-23
+
+### Added
+- `RecordingStudioGoogleDrive.picker_access_token(root:, actor:)` returns the current Oauth access token for the Google Picker. It uses `TokenStore` and `RecordingStudioOauth.connection_for`. Oauth refreshes expired tokens. Missing, revoked, needs-reconnect, or failed refresh raises `ReconnectRequired`.
+
+### Upgrade notes
+- Hand this token to the browser for the Google Picker only. Do not log it or persist it. Drive API calls still go through `Client.for`.
+
 ## [0.2.0] - 2026-10-22
 
 ### Added
@@ -38,5 +46,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - This is the first release of `recording_studio_google_drive`. Add the gem, then build a client with a token provider. Do not add Oauth as a dependency until that gem is released.
 - Call `search` with `query:` (not a positional argument). HTTP 401, `invalid_grant`, and `invalid_token` still raise `ReconnectRequired`. `unauthorized_client` raises `RequestError`.
 
+[0.3.0]: https://github.com/bowerbird-app/RecordingStudio_GoogleDrive/releases/tag/v0.3.0
 [0.2.0]: https://github.com/bowerbird-app/RecordingStudio_GoogleDrive/releases/tag/v0.2.0
 [0.1.0]: https://github.com/bowerbird-app/RecordingStudio_GoogleDrive/releases/tag/v0.1.0

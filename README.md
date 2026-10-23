@@ -48,6 +48,17 @@ uploaded = client.upload_file(
 
 `Client.for` calls `RecordingStudioOauth.connection_for(provider:, root:, actor:)`. Oauth refreshes an expired token. No connection, a revoked connection, or a failed refresh raises `ReconnectRequired`. Tokens are never written to the session, logs, or exception messages.
 
+The Google Picker in the browser needs that same short-lived token. Ask for it with `picker_access_token`. Hand it to the Picker only. Do not log it or persist it. Drive list, search, download, and upload still go through `Client`.
+
+```ruby
+token = RecordingStudioGoogleDrive.picker_access_token(
+  root: root_recording,
+  actor: current_user
+)
+```
+
+No connection, a connection that needs reconnecting, or a failed refresh raises `ReconnectRequired`.
+
 Tests and hosts that already have a token object can still pass `token_provider:` (a callable, or an object that responds to `access_token`). A raw String is a misconfiguration. A blank token at request time raises `ReconnectRequired`.
 
 `list` and `search` return a `Page`. Ask for the next page with `cursor:`. Search is a Drive `name contains` clause. Folders are included so callers can browse. Trashed files stay out.

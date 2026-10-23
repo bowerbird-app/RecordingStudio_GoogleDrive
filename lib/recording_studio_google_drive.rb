@@ -38,5 +38,9 @@ module RecordingStudioGoogleDrive
     def oauth_provider_attrs
       configuration.oauth_provider_attrs
     end
+
+    def picker_access_token(root:, actor:)
+      TokenStore.new(root: root, actor: actor).access_token
+    end
   end
 end

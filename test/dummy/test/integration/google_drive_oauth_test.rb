@@ -95,6 +95,35 @@ class GoogleDriveOauthTest < ActionDispatch::IntegrationTest
     refute_includes refreshed, " "
   end
 
+  test "picker_access_token returns the live oauth token" do
+    follow_connect!
+    connection = RecordingStudioOauth::OutboundConnection.find_by!(owner_actor: @user)
+
+    token = RecordingStudioGoogleDrive.picker_access_token(root: @root_recording, actor: @user)
+
+    assert_equal connection.access_token, token
+    refute_includes token, FakeOauth::FAIL_REFRESH
+  end
+
+  test "picker_access_token raises reconnect required when there is no connection" do
+    error = assert_raises(RecordingStudioGoogleDrive::ReconnectRequired) do
+      RecordingStudioGoogleDrive.picker_access_token(root: @root_recording, actor: @user)
+    end
+    assert_equal "Google Drive needs connecting again", error.message
+  end
+
+  test "picker_access_token raises reconnect required when the connection needs reconnect" do
+    follow_connect!
+    connection = RecordingStudioOauth::OutboundConnection.find_by!(owner_actor: @user)
+    connection.update!(status: "needs_reconnect")
+
+    error = assert_raises(RecordingStudioGoogleDrive::ReconnectRequired) do
+      RecordingStudioGoogleDrive.picker_access_token(root: @root_recording, actor: @user)
+    end
+    assert_kind_of RecordingStudioGoogleDrive::ReconnectRequired, error
+    refute_includes error.message, FakeOauth::FAIL_REFRESH
+  end
+
   test "refresh failure raises reconnect required" do
     follow_connect!
     connection = RecordingStudioOauth::OutboundConnection.find_by!(owner_actor: @user)
