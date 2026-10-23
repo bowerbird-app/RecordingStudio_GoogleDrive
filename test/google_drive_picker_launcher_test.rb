@@ -6,18 +6,16 @@ require "tmpdir"
 require "test_helper"
 
 class GoogleDrivePickerLauncherTest < Minitest::Test
-  def test_picker_opens_after_a_successful_connect
+  def test_picker_opens_once_after_the_uploader_that_started_connect
     skip "node is not available" unless node_available?
     skip "recording_studio_attachable is not bundled" unless attachable_launchers_path
 
     stdout, stderr, status = run_node_launcher_harness
     assert status.success?, "#{stderr}\n#{stdout}"
     result = JSON.parse(stdout)
-    assert_equal true, result.fetch("noAuthWithoutGesture")
-    assert_equal true, result.fetch("authOnGestureWhenNeedsAuth")
-    assert_equal true, result.fetch("pickerOpensAfterConnectWithoutNewClick")
-    assert_equal true, result.fetch("pickerOnGestureWhenAlreadyConnected")
-    assert_equal 0, result.fetch("prefetchPickerOpens")
+    assert_equal true, result.fetch("continueWithoutPriorAuth")
+    assert_equal true, result.fetch("pickerOpensOnceAfterAuth")
+    assert_equal true, result.fetch("secondRelaunchOpensNoPicker")
   end
 
   private
@@ -63,6 +61,7 @@ class GoogleDrivePickerLauncherTest < Minitest::Test
     <<~JS
       const pickerCalls = []
       const authCalls = []
+      const continueLabels = []
       let documentClicks = []
       globalThis.window = globalThis
       globalThis.window.location = { origin: "https://dummy.test" }
@@ -91,7 +90,11 @@ class GoogleDrivePickerLauncherTest < Minitest::Test
               if (type === "click") documentClicks.push(fn)
               if (type === "load") node._load = fn
             },
-            appendChild(child) { node.children.push(child); return child },
+            appendChild(child) {
+              node.children.push(child)
+              if (child?.type === "button" && child.textContent) continueLabels.push(child.textContent)
+              return child
+            },
             replaceChildren() { node.children = [] },
             submit() {},
             remove() {}
@@ -141,39 +144,37 @@ class GoogleDrivePickerLauncherTest < Minitest::Test
       }
 
       function controller(bootstrap) {
+        let current = bootstrap
         return {
           element: { querySelector() { return null }, appendChild() {} },
-          fetchProviderBootstrap() { return Promise.resolve(bootstrap) },
+          fetchProviderBootstrap() { return Promise.resolve(current) },
           handleProviderBootstrapError() {},
           clearProviderStatus() {},
           setProviderStatus() {},
           addProviderSelections() {},
-          openPopup() { authCalls.push(true); return {} }
+          openPopup() { authCalls.push(true); return {} },
+          useBootstrap(next) { current = next }
         }
       }
 
-      await launcher.prefetch({ controller: controller(connected), bootstrapUrl: "/b1" })
-      const prefetchPickerOpens = pickerCalls.length
+      const bystander = controller(connected)
+      await launcher.launch({ controller: bystander, providerKey: "google_drive", bootstrapUrl: "/other", button: {}, gesture: false })
+      const continueWithoutPriorAuth = pickerCalls.length === 0 && continueLabels.includes("Open Google Drive picker")
 
-      await launcher.launch({ controller: controller(needsAuth), providerKey: "google_drive", bootstrapUrl: "/auth-no-gesture", gesture: false })
-      const noAuthWithoutGesture = authCalls.length === 0 && pickerCalls.length === prefetchPickerOpens
+      const opener = controller(needsAuth)
+      await launcher.launch({ controller: opener, providerKey: "google_drive", bootstrapUrl: "/drive", button: {}, gesture: true })
+      opener.useBootstrap(connected)
+      launcher.forget("/drive")
+      await launcher.launch({ controller: opener, providerKey: "google_drive", bootstrapUrl: "/drive", button: {}, gesture: false })
+      const pickerOpensOnceAfterAuth = pickerCalls.length === 1
 
-      await launcher.launch({ controller: controller(needsAuth), providerKey: "google_drive", bootstrapUrl: "/auth", gesture: true })
-      const authOnGestureWhenNeedsAuth = authCalls.length === 1 && pickerCalls.length === prefetchPickerOpens
-
-      launcher.forget("/after-connect")
-      await launcher.launch({ controller: controller(connected), providerKey: "google_drive", bootstrapUrl: "/after-connect", gesture: false })
-      const pickerOpensAfterConnectWithoutNewClick = pickerCalls.length === prefetchPickerOpens + 1
-
-      await launcher.launch({ controller: controller(connected), providerKey: "google_drive", bootstrapUrl: "/already-connected", gesture: true })
-      const pickerOnGestureWhenAlreadyConnected = pickerCalls.length === prefetchPickerOpens + 2
+      await launcher.launch({ controller: opener, providerKey: "google_drive", bootstrapUrl: "/drive", button: {}, gesture: false })
+      const secondRelaunchOpensNoPicker = pickerCalls.length === 1
 
       console.log(JSON.stringify({
-        noAuthWithoutGesture,
-        authOnGestureWhenNeedsAuth,
-        pickerOpensAfterConnectWithoutNewClick,
-        pickerOnGestureWhenAlreadyConnected,
-        prefetchPickerOpens
+        continueWithoutPriorAuth,
+        pickerOpensOnceAfterAuth,
+        secondRelaunchOpensNoPicker
       }))
     JS
   end

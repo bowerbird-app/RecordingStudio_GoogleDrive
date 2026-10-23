@@ -4,11 +4,13 @@ import {
   providerNeedsAuth,
   openProviderAuth,
   hideProviderContinueButton,
+  showProviderContinueButton,
   registerUploadProviderLauncher
 } from "recording_studio_attachable/provider_launchers"
 
 let googlePickerPromise
 const sessions = createBootstrapCache()
+const pendingConnects = new WeakMap()
 const ACCESS_TOKEN_REFRESH_SKEW_SECONDS = 30
 
 async function ensureGooglePickerLoaded() {
@@ -110,6 +112,28 @@ function openPickerNow(controller, providerKey, bootstrap) {
     .then((selections) => applySelections(controller, providerKey, selections))
 }
 
+function pendingUrlsFor(controller) {
+  let urls = pendingConnects.get(controller)
+  if (!urls) {
+    urls = new Set()
+    pendingConnects.set(controller, urls)
+  }
+  return urls
+}
+
+function markPendingConnect(controller, bootstrapUrl) {
+  if (!controller || !bootstrapUrl) return
+
+  pendingUrlsFor(controller).add(bootstrapUrl)
+}
+
+function consumePendingConnect(controller, bootstrapUrl) {
+  const urls = pendingConnects.get(controller)
+  if (!urls?.delete(bootstrapUrl)) return false
+
+  return true
+}
+
 registerUploadProviderLauncher("google_drive", {
   forget(bootstrapUrl) {
     sessions.forget(bootstrapUrl)
@@ -138,7 +162,20 @@ registerUploadProviderLauncher("google_drive", {
     const bootstrap = session.bootstrap
 
     if (providerNeedsAuth(bootstrap)) {
-      if (gesture) openProviderAuth(controller, bootstrap, providerKey)
+      if (gesture && openProviderAuth(controller, bootstrap, providerKey)) {
+        markPendingConnect(controller, bootstrapUrl)
+      }
+      return
+    }
+
+    if (!gesture) {
+      if (consumePendingConnect(controller, bootstrapUrl)) {
+        return openPickerNow(controller, providerKey, bootstrap)
+      }
+
+      showProviderContinueButton(controller, button, "Open Google Drive picker", () => {
+        openPickerNow(controller, providerKey, bootstrap)
+      })
       return
     }
 
