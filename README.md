@@ -83,7 +83,7 @@ Default page size is 25. Dummy and tests point authorize, token, and revoke URLs
 
 This gem owns Google Drive import for Recording Studio Attachable. Attachable stays provider-neutral. The add-on loads only when `RecordingStudioAttachable` is present.
 
-1. Add `recording_studio_attachable` `>= 0.21.0, < 1.0` and this gem. Until Attachable 0.21.0 is tagged, pin Attachable to git ref `3d3dadc9072768dba4a5a993aefaddfbe85f4502`.
+1. Add `recording_studio_attachable` `>= 0.21.0, < 1.0` and this gem. Until Attachable 0.21.0 is tagged, pin Attachable to git ref `d1b22357f6d9594f26a2db009ecb8782c4eac7e4`.
 2. Enable Attachable on the recordable types that should accept files.
 3. Mount Attachable. This gem registers adapter routes at `/google_drive` (`as: :google_drive`), so host URLs and route helpers stay the same as Attachable's old in-tree Drive.
 4. Pin importmap modules `recording_studio_attachable/provider_launchers` and `recording_studio_google_drive/google_drive_picker_launcher`.
@@ -99,7 +99,7 @@ end
 
 Oauth `client_id` and `client_secret` stay on `recording_studio_oauth.outbound.google_drive`. Name the keys. Do not put the values in git.
 
-The add-on registers `:google_drive` with `register_upload_provider` (`connect:`, `reconnect_error:`). Those callables take keyword arguments only. Auth is `needs_auth` on bootstrap. Connect is the recipe, not the auth signal. HTML browse rows use `content_type`, `kind: :file` / `:folder`, `open_url`, a `current_path` string, and `parent_url`. Controllers inherit `RecordingStudioAttachable::ProviderController`. Imports go through `RecordingStudioAttachable::Services::ImportRemoteFiles`. Connect JSON uses `ProviderConnect.payload`. Drive-only copy such as `picker_requires_config` lives in this gem's locale file. Adapter routes register once for `:google_drive`.
+The add-on registers `:google_drive` with `register_upload_provider` (`connect:`, `reconnect_error:`). `connect` takes `recording:` and `context:`. `remote_importer` takes `parent_recording:`, `attachments:`, `actor:`, `impersonator:`, and `context:`. Auth is `needs_auth` on bootstrap. Connect is `{ url, method, fields, fallback_url }` — use `connect.fields.authenticity_token`, not a flat token. HTML browse uses Attachable's `_remote_file_browser` locals (`content_type`, `kind: :file` / `:folder`, `open_url`, `current_path`, `parent_url`, `path`). Controllers inherit `RecordingStudioAttachable::ProviderController`. Imports go through `RecordingStudioAttachable::Services::ImportRemoteFiles`. Drive bytes come from `Client#download`. URL downloads in Attachable go through `SafeRemoteFetch.call(..., max_bytes: configuration.max_file_size)`. Connect JSON uses `ProviderConnect.payload`. Drive-only copy such as `picker_requires_config` lives in this gem's locale file. Adapter routes register once for `:google_drive`.
 
 Import-only hosts can set `config.scopes` to `RecordingStudioGoogleDrive::AttachableConfiguration::DEFAULT_SCOPES` (`https://www.googleapis.com/auth/drive.readonly`).
 
@@ -121,7 +121,7 @@ After seed, open `/recording_studio_attachable/recordings/<page-recording-id>/at
 
 ## Development
 
-Ruby 3.3.12. Rails 8.1. Recording Studio `~> 4.2` (dummy GitHub tag `v4.7.0`). Oauth `>= 0.14.1, < 1.0` (dummy GitHub tag `v0.14.1`). Attachable `>= 0.21.0, < 1.0` (dummy git ref `3d3dadc9072768dba4a5a993aefaddfbe85f4502`).
+Ruby 3.3.12. Rails 8.1. Recording Studio `~> 4.2` (dummy GitHub tag `v4.7.0`). Oauth `>= 0.14.1, < 1.0` (dummy GitHub tag `v0.14.1`). Attachable `>= 0.21.0, < 1.0` (dummy git ref `d1b22357f6d9594f26a2db009ecb8782c4eac7e4`).
 
 ```bash
 bundle install

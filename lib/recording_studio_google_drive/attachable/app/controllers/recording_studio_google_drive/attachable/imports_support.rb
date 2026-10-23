@@ -67,6 +67,7 @@ module RecordingStudioGoogleDrive
       def assign_browser_location
         @current_path = browser_location.current_path
         @parent_url = browser_location.parent_url
+        @path = browser_location.current_folder_id
         @browse_query = browse_query
       end
 

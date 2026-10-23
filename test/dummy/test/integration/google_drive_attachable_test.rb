@@ -59,10 +59,13 @@ class GoogleDriveAttachableTest < ActionDispatch::IntegrationTest
     assert_equal "google_drive", payload.fetch("provider_key")
     assert payload.fetch("needs_auth")
     refute payload.fetch("reconnect")
+    assert_equal "google_drive", payload.fetch("launcher")
+    assert payload.fetch("import_url").present?
     assert_equal oauth_outbound_connect_path, payload.dig("connect", "url")
     assert_equal "post", payload.dig("connect", "method")
     assert payload.dig("connect", "fields", "authenticity_token").present?
     assert_includes payload.dig("connect", "fallback_url"), google_drive.recording_connect_path(@recording)
+    refute payload.key?("authenticity_token")
     refute payload.key?("access_token")
     assert_nil session["access_token"]
   end
@@ -137,6 +140,7 @@ class GoogleDriveAttachableTest < ActionDispatch::IntegrationTest
       assert_includes response.body, "Briefs"
       assert_includes response.body, "application/pdf"
       refute_includes response.body, "mimeType"
+      assert_select "a[href*='folder-1']", text: "Briefs"
 
       post google_drive.recording_imports_path(@recording), params: { file_ids: ["file-1"] }
       assert_nil flash[:alert], flash[:alert].to_s

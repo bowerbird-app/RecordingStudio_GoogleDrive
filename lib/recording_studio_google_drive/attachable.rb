@@ -59,12 +59,13 @@ module RecordingStudioGoogleDrive
       route_helpers.google_drive.recording_imports_path(recording, format: :json)
     end
 
-    def remote_importer(parent_recording:, attachments:, actor: nil, impersonator: nil, **)
+    def remote_importer(parent_recording:, attachments:, actor: nil, impersonator: nil, context: nil)
       RemoteImport.call(
         parent_recording: parent_recording,
         attachments: attachments,
         actor: actor,
-        impersonator: impersonator
+        impersonator: impersonator,
+        context: context
       )
     end
 

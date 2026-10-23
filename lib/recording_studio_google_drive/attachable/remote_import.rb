@@ -7,20 +7,22 @@ module RecordingStudioGoogleDrive
     class RemoteImport
       DESCRIPTION = "Imported from Google Drive"
 
-      def self.call(parent_recording:, attachments:, actor: nil, impersonator: nil)
+      def self.call(parent_recording:, attachments:, actor: nil, impersonator: nil, context: nil)
         new(
           parent_recording: parent_recording,
           attachments: attachments,
           actor: actor,
-          impersonator: impersonator
+          impersonator: impersonator,
+          context: context
         ).call
       end
 
-      def initialize(parent_recording:, attachments:, actor: nil, impersonator: nil)
+      def initialize(parent_recording:, attachments:, actor: nil, impersonator: nil, context: nil)
         @parent_recording = parent_recording
         @attachments = Array(attachments)
         @actor = actor
         @impersonator = impersonator
+        @context = context
       end
 
       def call
@@ -37,7 +39,7 @@ module RecordingStudioGoogleDrive
 
       private
 
-      attr_reader :parent_recording, :attachments, :actor, :impersonator
+      attr_reader :parent_recording, :attachments, :actor, :impersonator, :context
 
       def selections
         @selections ||= attachments.filter_map { |attachment| RemoteImportSelection.from(attachment) }

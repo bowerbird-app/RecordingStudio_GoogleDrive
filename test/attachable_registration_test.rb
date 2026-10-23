@@ -85,6 +85,9 @@ class AttachableRegistrationTest < Minitest::Test
     assert_equal false, options[:reconnect_error].call(StandardError.new("x"))
     assert_keyword_only options[:connect]
     assert_keyword_only options[:remote_importer]
+    assert_equal %i[recording context], keyword_names(options[:connect])
+    assert_equal %i[parent_recording attachments actor impersonator context],
+                 keyword_names(options[:remote_importer])
   ensure
     RecordingStudioGoogleDrive.configuration.attachable.enabled = original
   end
@@ -118,6 +121,8 @@ class AttachableRegistrationTest < Minitest::Test
     assert_includes support, "kind: :folder"
     assert_includes view, "current_path: @current_path"
     assert_includes view, "parent_url: @parent_url"
+    assert_includes view, "path: @path"
+    assert_includes view, "flow_params: upload_flow_params"
   end
 
   private
@@ -128,5 +133,9 @@ class AttachableRegistrationTest < Minitest::Test
     refute_includes types, :opt
     refute_includes types, :rest
     assert types.intersect?(%i[key keyreq keyrest])
+  end
+
+  def keyword_names(callable)
+    callable.parameters.filter_map { |type, name| name if %i[key keyreq].include?(type) }
   end
 end

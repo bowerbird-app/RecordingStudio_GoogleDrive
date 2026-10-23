@@ -11,7 +11,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - Attachable settings live on this gem: `RecordingStudioGoogleDrive.configure { |c| c.attachable.api_key = ... }`. Keys are `enabled`, `api_key`, `app_id`, and `page_size`.
 - Google Picker launcher JS ships here and imports helpers from `recording_studio_attachable/provider_launchers`. Auth is `providerNeedsAuth` / `needs_auth` only. Connect is the recipe, not the auth signal. The Picker opens only from a user click.
 - HTML Drive browse rows use generic `content_type` and `kind: :file` / `:folder` with `open_url`, a `current_path` string, and `parent_url`. `connect` and `remote_importer` take keyword arguments only.
-- Depends on `recording_studio_attachable` `>= 0.21.0, < 1.0`. Dummy pins git ref `3d3dadc9072768dba4a5a993aefaddfbe85f4502` until Attachable 0.21.0 is tagged.
+- Depends on `recording_studio_attachable` `>= 0.21.0, < 1.0`. Dummy pins git ref `d1b22357f6d9594f26a2db009ecb8782c4eac7e4` until Attachable 0.21.0 is tagged.
 
 ### Upgrade notes
 - Hosts that used Attachable's in-tree Drive keep the same mount path (`/recording_studio_attachable/google_drive`) and `google_drive_*` route helpers. Remove Attachable `config.google_drive.*` and set this gem's `config.attachable.*` instead.
