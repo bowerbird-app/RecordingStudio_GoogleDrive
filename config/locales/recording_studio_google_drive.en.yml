@@ -2,3 +2,9 @@ en:
   recording_studio:
     google_drive:
       picker_requires_config: "Google Drive picker needs an API key and app id"
+      select_at_least_one: "Select at least one file"
+      disconnect_failed: "%{provider} isn't connected."
+      reconnect_to_continue: "Reconnect %{provider} to continue"
+      imported:
+        one: "Imported %{count} file."
+        other: "Imported %{count} files."

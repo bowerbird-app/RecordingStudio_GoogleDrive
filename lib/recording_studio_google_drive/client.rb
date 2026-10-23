@@ -47,13 +47,14 @@ module RecordingStudioGoogleDrive
       DriveFile.from_api(raw)
     end
 
-    def download(file_id, resource_key: nil)
+    def download(file_id, resource_key: nil, max_bytes: nil)
       metadata = fetch_file(file_id, resource_key: resource_key)
+      reject_oversized!(metadata, max_bytes)
       export = ExportFormats.lookup(metadata.mime_type)
       DownloadedFile.new(
         filename: ExportFormats.filename(metadata.name, export),
         content_type: ExportFormats.content_type(metadata.mime_type, export),
-        body: download_body(file_id, resource_key, export)
+        body: download_body(file_id, resource_key, export, max_bytes)
       )
     end
 
@@ -85,11 +86,18 @@ module RecordingStudioGoogleDrive
       page_size || @page_size || RecordingStudioGoogleDrive.configuration.page_size
     end
 
-    def download_body(file_id, resource_key, export)
+    def download_body(file_id, resource_key, export, max_bytes)
       path = file_resource_path(file_id)
-      return http.get_bytes("#{path}/export", export_params(resource_key, export)) if export
+      return http.get_bytes("#{path}/export", export_params(resource_key, export), max_bytes: max_bytes) if export
 
-      http.get_bytes(path, media_params(resource_key))
+      http.get_bytes(path, media_params(resource_key), max_bytes: max_bytes)
+    end
+
+    def reject_oversized!(metadata, max_bytes)
+      return if max_bytes.blank? || metadata.size.nil?
+      return unless metadata.size > max_bytes
+
+      raise ArgumentError, "Remote file exceeds maximum file size"
     end
 
     def export_params(resource_key, export)

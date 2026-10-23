@@ -3,18 +3,9 @@
 require "test_helper"
 require "recording_studio_attachable"
 
-unless defined?(RecordingStudioAttachable::Services::ImportRemoteFiles)
-  module RecordingStudioAttachable
-    module Services
-      module ImportRemoteFiles
-        def self.call(**)
-          raise "ImportRemoteFiles.call must be stubbed in this test"
-        end
-      end
-    end
-  end
-end
-
+attachable_root = Gem.loaded_specs.fetch("recording_studio_attachable").full_gem_path
+require File.join(attachable_root, "app/services/recording_studio_attachable/services/application_service")
+require File.join(attachable_root, "app/services/recording_studio_attachable/services/import_remote_files")
 require "recording_studio_google_drive/attachable"
 
 class AttachableRemoteImportTest < Minitest::Test
@@ -27,18 +18,20 @@ class AttachableRemoteImportTest < Minitest::Test
 
   def setup
     @captured = nil
+    @download_kwargs = {}
     @client = fake_client
   end
 
-  def test_blank_selection_returns_a_failed_result
-    result = RecordingStudioGoogleDrive::Attachable::RemoteImport.call(
-      parent_recording: Object.new,
-      attachments: [],
-      actor: Object.new
-    )
+  def test_blank_selection_raises_this_gems_locale_string
+    error = assert_raises(ArgumentError) do
+      RecordingStudioGoogleDrive::Attachable::RemoteImport.call(
+        parent_recording: Object.new,
+        attachments: [],
+        actor: Object.new
+      )
+    end
 
-    refute_predicate result, :success?
-    assert_match(/select at least one/i, result.error)
+    assert_match(/select at least one/i, error.message)
   end
 
   def test_builds_import_payloads_from_picker_attachments
@@ -80,7 +73,8 @@ class AttachableRemoteImportTest < Minitest::Test
     assert_equal "%PDF-1.4\nbrief", downloaded[:io].read
     assert_equal "Brief.pdf", downloaded[:filename]
     assert_equal "application/pdf", downloaded[:content_type]
-    assert_equal 12, downloaded[:byte_size]
+    assert_equal "%PDF-1.4\nbrief".bytesize, downloaded[:byte_size]
+    assert_equal RecordingStudioAttachable.configuration.max_file_size, @download_kwargs[:max_bytes]
   end
 
   def test_rejects_files_over_attachable_max_size
@@ -135,9 +129,13 @@ class AttachableRemoteImportTest < Minitest::Test
       filename: "Brief.pdf",
       content_type: "application/pdf"
     )
+    download_kwargs = @download_kwargs
     client = Object.new
     client.define_singleton_method(:fetch_file) { |_id, **| file }
-    client.define_singleton_method(:download) { |_id, **| downloaded }
+    client.define_singleton_method(:download) do |_id, **kwargs|
+      download_kwargs[:max_bytes] = kwargs[:max_bytes]
+      downloaded
+    end
     client
   end
 

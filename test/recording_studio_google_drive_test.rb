@@ -14,9 +14,13 @@ class RecordingStudioGoogleDriveTest < Minitest::Test
   def test_gemspec_pins_recording_studio_4_2
     gemspec = File.read(File.expand_path("../recording_studio_google_drive.gemspec", __dir__))
 
+    gemfile = File.read(File.expand_path("../Gemfile", __dir__))
+
     assert_includes gemspec, 'spec.add_dependency "recording_studio", "~> 4.2"'
     assert_includes gemspec, 'spec.add_dependency "recording_studio_oauth", ">= 0.14.1", "< 1.0"'
-    assert_includes gemspec, 'spec.add_dependency "recording_studio_attachable", ">= 0.21.0", "< 1.0"'
+    refute_includes gemspec, "recording_studio_attachable"
+    assert_includes gemfile, "recording_studio_attachable"
+    assert_includes gemfile, "900cc3a169e26f0e4604e1acb3cbc1d81281aa87"
     assert_includes gemspec, 'spec.required_ruby_version = ">= 3.3.0"'
   end
 

@@ -82,20 +82,9 @@ module RecordingStudioGoogleDrive
     end
 
     def register_adapter_routes!
-      return if adapter_routes_registered?
-
-      @adapter_routes_registered = true
       RecordingStudioAttachable.register_adapter_routes(:google_drive) do
         mount RecordingStudioGoogleDrive::Attachable::Engine, at: "/google_drive", as: :google_drive
       end
     end
-
-    def adapter_routes_registered?
-      @adapter_routes_registered == true
-    end
   end
-end
-
-ActiveSupport.on_load(:recording_studio_attachable) do
-  RecordingStudioGoogleDrive::Attachable.register_adapter_routes!
 end

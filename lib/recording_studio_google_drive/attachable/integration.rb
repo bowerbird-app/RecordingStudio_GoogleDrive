@@ -29,10 +29,6 @@ module RecordingStudioGoogleDrive
         [token, expires_at]
       end
 
-      def reconnect_required?(error)
-        error.is_a?(RecordingStudioGoogleDrive::ReconnectRequired)
-      end
-
       def request_error?(error)
         error.is_a?(RecordingStudioGoogleDrive::RequestError)
       end

@@ -57,7 +57,6 @@ class ConfigurationTest < Minitest::Test
 
     refute_predicate attachable, :enabled?
     refute_predicate attachable, :picker_configured?
-    refute_predicate attachable, :available?
     assert_equal 25, attachable.page_size
     assert_equal ["https://www.googleapis.com/auth/drive.readonly"],
                  RecordingStudioGoogleDrive::AttachableConfiguration::DEFAULT_SCOPES
@@ -71,7 +70,6 @@ class ConfigurationTest < Minitest::Test
 
     assert_predicate attachable, :enabled?
     assert_predicate attachable, :picker_configured?
-    assert_predicate attachable, :available?
     assert_equal "picker-key", attachable.api_key
     assert_equal "123456", attachable.app_id
     assert_equal 10, attachable.page_size

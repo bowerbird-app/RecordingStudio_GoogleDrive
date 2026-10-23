@@ -3,7 +3,6 @@ import {
   createBootstrapCache,
   providerNeedsAuth,
   openProviderAuth,
-  csrfToken,
   hideProviderContinueButton,
   showProviderContinueButton,
   registerUploadProviderLauncher
@@ -79,10 +78,6 @@ function accessTokenNearExpiry(bootstrap) {
   return expiresAt <= (Date.now() / 1000) + ACCESS_TOKEN_REFRESH_SKEW_SECONDS
 }
 
-function driveNeedsAuth(bootstrap) {
-  return providerNeedsAuth(bootstrap)
-}
-
 function startBootstrap(controller, bootstrapUrl, start) {
   if (typeof start === "function") return start
 
@@ -142,9 +137,8 @@ registerUploadProviderLauncher("google_drive", {
     }
 
     const bootstrap = session.bootstrap
-    csrfToken(controller, bootstrap)
 
-    if (driveNeedsAuth(bootstrap)) {
+    if (providerNeedsAuth(bootstrap)) {
       if (gesture) openProviderAuth(controller, bootstrap, providerKey)
       return
     }

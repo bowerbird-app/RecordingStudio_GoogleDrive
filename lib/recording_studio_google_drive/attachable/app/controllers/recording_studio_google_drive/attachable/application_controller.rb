@@ -14,17 +14,6 @@ module RecordingStudioGoogleDrive
         RecordingStudioGoogleDrive.configuration.attachable
       end
 
-      def ensure_google_drive_enabled!
-        return if attachable_config.enabled?
-
-        raise RecordingStudioAttachable::DependencyUnavailableError,
-              RecordingStudioAttachable::Copy.t(
-                "providers.not_available",
-                provider: provider_label,
-                default: "#{provider_label} isn't available right now"
-              )
-      end
-
       def ensure_picker_configured!
         return if attachable_config.picker_configured?
 
@@ -33,10 +22,6 @@ module RecordingStudioGoogleDrive
                 "recording_studio.google_drive.picker_requires_config",
                 default: "Google Drive picker needs an API key and app id"
               )
-      end
-
-      def authorize_google_drive_upload!
-        authorize_provider_upload!
       end
 
       def google_drive_root
@@ -52,7 +37,8 @@ module RecordingStudioGoogleDrive
       end
 
       def google_drive_reconnect?
-        false
+        connection = Integration.connection(root: google_drive_root, actor: current_attachable_actor)
+        connection.respond_to?(:needs_reconnect?) && connection.needs_reconnect?
       end
 
       def oauth_connect_path

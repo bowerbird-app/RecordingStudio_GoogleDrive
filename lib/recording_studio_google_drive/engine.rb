@@ -37,12 +37,13 @@ module RecordingStudioGoogleDrive
       RecordingStudioGoogleDrive.register_oauth_provider!
     end
 
-    initializer "recording_studio_google_drive.register_attachable_upload_provider",
-                after: :load_config_initializers do
-      next unless defined?(RecordingStudioAttachable)
-      next unless defined?(RecordingStudioGoogleDrive::Attachable)
-
-      RecordingStudioGoogleDrive::Attachable.register_upload_provider!
+    initializer "recording_studio_google_drive.load_attachable_addon",
+                after: :load_config_initializers,
+                before: "recording_studio_attachable.adapter_routes" do
+      ActiveSupport.on_load(:recording_studio_attachable) do
+        RecordingStudioGoogleDrive::Attachable.register_adapter_routes!
+        RecordingStudioGoogleDrive::Attachable.register_upload_provider!
+      end
     end
   end
 end

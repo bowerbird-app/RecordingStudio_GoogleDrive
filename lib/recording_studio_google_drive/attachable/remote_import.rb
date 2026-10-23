@@ -26,7 +26,7 @@ module RecordingStudioGoogleDrive
       end
 
       def call
-        return blank_selection_result if selections.empty?
+        raise ArgumentError, blank_selection_message if selections.empty?
 
         RecordingStudioAttachable::Services::ImportRemoteFiles.call(
           parent_recording: parent_recording,
@@ -49,13 +49,10 @@ module RecordingStudioGoogleDrive
         Integration.client(root: Integration.root_for(parent_recording), actor: actor)
       end
 
-      def blank_selection_result
-        RecordingStudioAttachable::Services::BaseService::Result.new(
-          success: false,
-          error: RecordingStudioAttachable::Copy.t(
-            "providers.select_at_least_one",
-            default: "Select at least one file"
-          )
+      def blank_selection_message
+        I18n.t(
+          "recording_studio.google_drive.select_at_least_one",
+          default: "Select at least one file"
         )
       end
 
@@ -69,7 +66,7 @@ module RecordingStudioGoogleDrive
       def named_payload(selection, client, metadata)
         name = selection.name.presence || metadata.name
         {
-          download: -> { downloaded_payload(download_file(selection, client), metadata) },
+          download: -> { downloaded_payload(download_file(selection, client)) },
           filename: name,
           name: name,
           description: selection.description.presence || DESCRIPTION,
@@ -82,7 +79,11 @@ module RecordingStudioGoogleDrive
       end
 
       def download_file(selection, client)
-        client.download(selection.id, resource_key: selection.resource_key)
+        client.download(selection.id, resource_key: selection.resource_key, max_bytes: max_file_size)
+      end
+
+      def max_file_size
+        RecordingStudioAttachable.configuration.max_file_size
       end
 
       def import_metadata(selection, metadata)
@@ -92,17 +93,17 @@ module RecordingStudioGoogleDrive
         }.compact.merge(selection.metadata)
       end
 
-      def downloaded_payload(downloaded, metadata)
+      def downloaded_payload(downloaded)
         {
           io: StringIO.new(downloaded.body),
           filename: downloaded.filename,
           content_type: downloaded.content_type,
-          byte_size: metadata.size
+          byte_size: downloaded.body.bytesize
         }
       end
 
       def reject_oversized!(metadata)
-        max_bytes = RecordingStudioAttachable.configuration.max_file_size
+        max_bytes = max_file_size
         return if max_bytes.blank? || metadata.size.nil?
         return unless metadata.size > max_bytes
 

@@ -6,8 +6,8 @@ module RecordingStudioGoogleDrive
       include ImportsSupport
 
       def index
-        authorize_google_drive_upload!
-        ensure_google_drive_enabled!
+        authorize_provider_upload!
+        ensure_provider_available!
 
         return render_disconnected unless google_drive_connected?
 
@@ -20,8 +20,8 @@ module RecordingStudioGoogleDrive
       end
 
       def create
-        authorize_google_drive_upload!
-        ensure_google_drive_enabled!
+        authorize_provider_upload!
+        ensure_provider_available!
         respond_to_import(import_selected)
       rescue RecordingStudioAttachable::DependencyUnavailableError => e
         respond_to_unavailable_create(e)
@@ -83,8 +83,8 @@ module RecordingStudioGoogleDrive
       end
 
       def imported_notice(result)
-        RecordingStudioAttachable::Copy.t(
-          "providers.imported_count",
+        I18n.t(
+          "recording_studio.google_drive.imported",
           count: result.value.size,
           default: "Imported #{result.value.size} files."
         )

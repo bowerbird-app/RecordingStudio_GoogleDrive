@@ -27,14 +27,44 @@ class OauthProviderTest < Minitest::Test
     refute attrs.key?(:http)
   end
 
-  def test_register_oauth_provider_uses_oauth_public_api
+  def test_engine_boots_without_oauth_credentials
+    RecordingStudioGoogleDrive.configuration.client_id = nil
+    RecordingStudioGoogleDrive.configuration.client_secret = nil
+    app = blank_rails_credentials_app
+
+    Rails.stub(:application, app) do
+      find_oauth_initializer.block.call(Object.new)
+    end
+  end
+
+  def test_engine_registers_oauth_when_credentials_are_present
+    RecordingStudioGoogleDrive.configuration.client_id = "drive-client"
+    RecordingStudioGoogleDrive.configuration.client_secret = "drive-secret"
     captured = nil
     RecordingStudioOauth.stub(:register_outbound_provider, ->(**attrs) { captured = attrs }) do
-      RecordingStudioGoogleDrive.register_oauth_provider!
+      find_oauth_initializer.block.call(Object.new)
     end
 
     assert_equal :google_drive, captured[:key]
+    assert_equal "drive-client", captured[:client_id]
+    assert_equal "drive-secret", captured[:client_secret]
     assert_equal true, captured[:refresh]
+  end
+
+  def test_register_oauth_provider_does_not_swallow_oauth_errors
+    RecordingStudioGoogleDrive.configuration.client_id = "drive-client"
+    RecordingStudioGoogleDrive.configuration.client_secret = "drive-secret"
+
+    error = assert_raises(ArgumentError) do
+      RecordingStudioOauth.stub(
+        :register_outbound_provider,
+        ->(**) { raise ArgumentError, "authorize_url is required" }
+      ) do
+        RecordingStudioGoogleDrive.register_oauth_provider!
+      end
+    end
+
+    assert_equal "authorize_url is required", error.message
   end
 
   def test_dummy_fake_credentials_are_passed_when_configured
@@ -52,6 +82,29 @@ class OauthProviderTest < Minitest::Test
     assert_equal "/fake_oauth/authorize", attrs[:authorize_url]
     assert_equal "dummy-fake-drive", attrs[:client_id]
     assert_equal :fake, attrs[:http]
+  end
+
+  def test_register_oauth_provider_runs_when_credentials_are_in_rails
+    RecordingStudioGoogleDrive.configuration.client_id = nil
+    RecordingStudioGoogleDrive.configuration.client_secret = nil
+    app = Object.new
+    app.define_singleton_method(:credentials) do
+      {
+        recording_studio_oauth: {
+          outbound: { google_drive: { client_id: "from-rails", client_secret: "from-rails-secret" } }
+        }
+      }
+    end
+    app.define_singleton_method(:respond_to?) { |name, *| name == :credentials || super(name) }
+
+    captured = nil
+    Rails.stub(:application, app) do
+      RecordingStudioOauth.stub(:register_outbound_provider, ->(**attrs) { captured = attrs }) do
+        RecordingStudioGoogleDrive.register_oauth_provider!
+      end
+    end
+
+    assert_equal :google_drive, captured[:key]
   end
 
   def test_engine_registers_the_oauth_provider_after_host_initializers
@@ -87,5 +140,18 @@ class OauthProviderTest < Minitest::Test
   def restore_config(values)
     config = RecordingStudioGoogleDrive.configuration
     values.each { |key, value| config.public_send("#{key}=", value) }
+  end
+
+  def find_oauth_initializer
+    RecordingStudioGoogleDrive::Engine.initializers.find do |initializer|
+      initializer.name == "recording_studio_google_drive.register_oauth_provider"
+    end
+  end
+
+  def blank_rails_credentials_app
+    app = Object.new
+    app.define_singleton_method(:credentials) { {} }
+    app.define_singleton_method(:respond_to?) { |name, *| name == :credentials || super(name) }
+    app
   end
 end

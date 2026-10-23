@@ -149,7 +149,6 @@ PATH
     recording_studio_google_drive (0.4.0)
       rails (~> 8.1.0)
       recording_studio (~> 4.2)
-      recording_studio_attachable (>= 0.21.0, < 1.0)
       recording_studio_oauth (>= 0.14.1, < 1.0)
 
 GEM

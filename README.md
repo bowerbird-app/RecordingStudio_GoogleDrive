@@ -18,7 +18,7 @@ recording_studio_oauth:
       client_secret:
 ```
 
-The gem registers `:google_drive` with Oauth on boot: authorize URL, token URL, revoke URL, Drive scopes, PKCE, and refresh. `access_type=offline` and `prompt=consent` are sent so Google issues a refresh token. Oauth reads `client_id` and `client_secret` from `recording_studio_oauth.outbound.google_drive` unless you pass them in configuration.
+The gem registers `:google_drive` with Oauth on boot. It skips that registration only when both `client_id` and `client_secret` are blank (this gem's config or `recording_studio_oauth.outbound.google_drive`), so a host without Drive credentials still boots. Authorize URL, token URL, revoke URL, Drive scopes, PKCE, and refresh are the defaults. `access_type=offline` and `prompt=consent` are sent so Google issues a refresh token.
 
 ## Client
 
@@ -61,7 +61,7 @@ No connection, a connection that needs reconnecting, or a failed refresh raises 
 
 Tests and hosts that already have a token object can still pass `token_provider:` (a callable, or an object that responds to `access_token`). A raw String is a misconfiguration. A blank token at request time raises `ReconnectRequired`.
 
-`list` and `search` return a `Page`. Ask for the next page with `cursor:`. Search is a Drive `name contains` clause. Pass `parent_id:` to search or list inside a folder. Folders are included so callers can browse. Trashed files stay out.
+`list` and `search` return a `Page`. Ask for the next page with `cursor:`. Search is a Drive `name contains` clause. Pass `parent_id:` to search or list inside a folder. Folders are included so callers can browse. Trashed files stay out. `download` takes `max_bytes:` to abort an oversize body before it is fully read. Native Docs, Sheets, and Slides exports have no metadata size, so that cap still applies.
 
 Download returns a `DownloadedFile` with `body`, `filename`, and `content_type`. Google Docs, Sheets, Slides, and Drawings go through Drive export. Docs and Slides become PDF. Sheets become CSV. Drawings become PNG. Other files download as binary.
 
@@ -81,9 +81,9 @@ Default page size is 25. Dummy and tests point authorize, token, and revoke URLs
 
 ## Attachable upload add-on
 
-This gem owns Google Drive import for Recording Studio Attachable. Attachable stays provider-neutral. The add-on loads only when `RecordingStudioAttachable` is present.
+This gem owns Google Drive import for Recording Studio Attachable. Attachable stays provider-neutral. This gem does not depend on Attachable. The add-on loads only when `RecordingStudioAttachable` `>= 0.21.0` is present (`ActiveSupport.on_load(:recording_studio_attachable)`). Dummy and CI pin Attachable in the Gemfile.
 
-1. Add `recording_studio_attachable` `>= 0.21.0, < 1.0` and this gem. Until Attachable 0.21.0 is tagged, pin Attachable to git ref `900cc3a169e26f0e4604e1acb3cbc1d81281aa87`.
+1. Optionally add `recording_studio_attachable` `>= 0.21.0, < 1.0`. Until Attachable 0.21.0 is tagged, pin Attachable to git ref `900cc3a169e26f0e4604e1acb3cbc1d81281aa87`.
 2. Enable Attachable on the recordable types that should accept files.
 3. Mount Attachable. This gem registers adapter routes at `/google_drive` (`as: :google_drive`), so host URLs and route helpers stay the same as Attachable's old in-tree Drive.
 4. Pin importmap modules `recording_studio_attachable/provider_launchers` and `recording_studio_google_drive/google_drive_picker_launcher`.
@@ -121,7 +121,7 @@ After seed, open `/recording_studio_attachable/recordings/<page-recording-id>/at
 
 ## Development
 
-Ruby 3.3.12. Rails 8.1. Recording Studio `~> 4.2` (dummy GitHub tag `v4.7.0`). Oauth `>= 0.14.1, < 1.0` (dummy GitHub tag `v0.14.1`). Attachable `>= 0.21.0, < 1.0` (dummy git ref `900cc3a169e26f0e4604e1acb3cbc1d81281aa87`).
+Ruby 3.3.12. Rails 8.1. Recording Studio `~> 4.2` (dummy GitHub tag `v4.7.0`). Oauth `>= 0.14.1, < 1.0` (dummy GitHub tag `v0.14.1`). Attachable is optional (`>= 0.21.0, < 1.0`; dummy git ref `900cc3a169e26f0e4604e1acb3cbc1d81281aa87`).
 
 ```bash
 bundle install

@@ -127,10 +127,6 @@ module RecordingStudioGoogleDrive
       present_credential?(api_key) && present_credential?(app_id)
     end
 
-    def available?
-      enabled? && picker_configured?
-    end
-
     def merge!(hash)
       raise ArgumentError, "Google Drive attachable configuration must be a hash" unless hash.is_a?(Hash)
 

@@ -6,7 +6,7 @@ module RecordingStudioGoogleDrive
       private
 
       def handle_index_drive_error(error)
-        return render_disconnected(reconnect: true) if Integration.reconnect_required?(error)
+        return render_disconnected(reconnect: true) if Attachable.reconnect_error?(error)
         raise unless Integration.request_error?(error)
 
         @query = params[:query].to_s.strip
@@ -18,7 +18,8 @@ module RecordingStudioGoogleDrive
       end
 
       def handle_create_drive_error(error)
-        return respond_to_reconnect_error if Integration.reconnect_required?(error)
+        return respond_to_reconnect_error if Attachable.reconnect_error?(error)
+        return respond_to_request_error(error) if error.is_a?(ArgumentError)
         raise unless Integration.request_error?(error)
 
         respond_to_request_error(error)
@@ -45,8 +46,8 @@ module RecordingStudioGoogleDrive
       end
 
       def reconnect_message
-        RecordingStudioAttachable::Copy.t(
-          "providers.reconnect_to_continue",
+        I18n.t(
+          "recording_studio.google_drive.reconnect_to_continue",
           provider: provider_label,
           default: "Reconnect #{provider_label} to continue"
         )

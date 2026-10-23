@@ -4,8 +4,8 @@ module RecordingStudioGoogleDrive
   module Attachable
     class BootstrapController < ApplicationController
       def show
-        authorize_google_drive_upload!
-        ensure_google_drive_enabled!
+        authorize_provider_upload!
+        ensure_provider_available!
         ensure_picker_configured!
 
         render json: bootstrap_payload
@@ -20,7 +20,7 @@ module RecordingStudioGoogleDrive
 
         connected_bootstrap
       rescue StandardError => e
-        raise unless Integration.reconnect_required?(e)
+        raise unless Attachable.reconnect_error?(e)
 
         connect_bootstrap(reconnect: true)
       end

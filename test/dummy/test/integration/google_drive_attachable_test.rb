@@ -108,6 +108,58 @@ class GoogleDriveAttachableTest < ActionDispatch::IntegrationTest
     refute_includes response.body, "fake-access-"
   end
 
+  test "imports index searches by query inside the current folder" do
+    follow_connect!
+
+    searched = nil
+    file = drive_file
+    client = import_client
+    client.define_singleton_method(:search) do |**kwargs|
+      searched = kwargs
+      RecordingStudioGoogleDrive::Page.new(entries: [file], next_cursor: nil)
+    end
+
+    with_drive_client(client) do
+      get google_drive.recording_imports_path(@recording, query: "brief", folder_ids: ["folder-1"])
+      assert_response :success
+    end
+
+    assert_equal "brief", searched[:query]
+    assert_equal "folder-1", searched[:parent_id]
+    assert_includes response.body, "Brief.pdf"
+    assert_includes response.body, 'name="query"'
+  end
+
+  test "imports index page two follows page_token" do
+    follow_connect!
+
+    listed = []
+    first_file = drive_file
+    second_file = second_drive_file
+    client = import_client
+    client.define_singleton_method(:list) do |**kwargs|
+      listed << kwargs
+      if kwargs[:cursor] == "token-2"
+        RecordingStudioGoogleDrive::Page.new(entries: [second_file], next_cursor: nil)
+      else
+        RecordingStudioGoogleDrive::Page.new(entries: [first_file], next_cursor: "token-2")
+      end
+    end
+
+    with_drive_client(client) do
+      get google_drive.recording_imports_path(@recording)
+      assert_response :success
+      assert_includes response.body, "Brief.pdf"
+      assert_includes response.body, "page_token=token-2"
+
+      get google_drive.recording_imports_path(@recording, page_token: "token-2")
+      assert_response :success
+      assert_includes response.body, "Memo.pdf"
+    end
+
+    assert_equal "token-2", listed.last[:cursor]
+  end
+
   test "imports index lists a nested folder by folder_ids" do
     follow_connect!
 
@@ -128,6 +180,19 @@ class GoogleDriveAttachableTest < ActionDispatch::IntegrationTest
     end
 
     assert_equal "folder-1", listed[:parent_id]
+  end
+
+  test "connected import copies two selected files through ImportRemoteFiles" do
+    follow_connect!
+
+    with_drive_client(import_client) do
+      post google_drive.recording_imports_path(@recording), params: { file_ids: ["file-1", "file-2"] }
+      assert_nil flash[:alert], flash[:alert].to_s
+      assert_response :redirect
+    end
+
+    imported = imported_attachments
+    assert_equal %w[Brief.pdf Memo.pdf], imported.map(&:original_filename).sort
   end
 
   test "connected import copies a selected file through ImportRemoteFiles" do
@@ -221,20 +286,13 @@ class GoogleDriveAttachableTest < ActionDispatch::IntegrationTest
   end
 
   def import_client
-    drive_file = RecordingStudioGoogleDrive::DriveFile.new(
-      id: "file-1",
-      name: "Brief.pdf",
-      mime_type: "application/pdf",
-      size: 12,
-      modified_at: nil,
-      web_view_link: "https://drive.test/file-1",
-      resource_key: nil
-    )
-    downloaded = RecordingStudioGoogleDrive::DownloadedFile.new(
-      body: "%PDF-1.4\nbrief",
-      filename: "Brief.pdf",
-      content_type: "application/pdf"
-    )
+    first = drive_file
+    second = second_drive_file
+    files = { "file-1" => first, "file-2" => second }
+    downloads = {
+      "file-1" => downloaded_file("Brief.pdf", "%PDF-1.4\nbrief", "application/pdf"),
+      "file-2" => downloaded_file("Memo.pdf", "%PDF-1.4\nmemo", "application/pdf")
+    }
     folder = RecordingStudioGoogleDrive::DriveFile.new(
       id: "folder-1",
       name: "Briefs",
@@ -246,11 +304,51 @@ class GoogleDriveAttachableTest < ActionDispatch::IntegrationTest
     )
     client = Object.new
     client.define_singleton_method(:list) do |**|
-      RecordingStudioGoogleDrive::Page.new(entries: [folder, drive_file], next_cursor: nil)
+      RecordingStudioGoogleDrive::Page.new(entries: [folder, first], next_cursor: nil)
     end
-    client.define_singleton_method(:fetch_file) { |_id, resource_key: nil| drive_file }
-    client.define_singleton_method(:download) { |_id, resource_key: nil| downloaded }
+    client.define_singleton_method(:fetch_file) { |id, resource_key: nil| files.fetch(id) }
+    client.define_singleton_method(:download) { |id, resource_key: nil, max_bytes: nil| downloads.fetch(id) }
     client
+  end
+
+  def drive_file
+    RecordingStudioGoogleDrive::DriveFile.new(
+      id: "file-1",
+      name: "Brief.pdf",
+      mime_type: "application/pdf",
+      size: 12,
+      modified_at: nil,
+      web_view_link: "https://drive.test/file-1",
+      resource_key: nil
+    )
+  end
+
+  def second_drive_file
+    RecordingStudioGoogleDrive::DriveFile.new(
+      id: "file-2",
+      name: "Memo.pdf",
+      mime_type: "application/pdf",
+      size: 14,
+      modified_at: nil,
+      web_view_link: "https://drive.test/file-2",
+      resource_key: nil
+    )
+  end
+
+  def downloaded_file(filename, body, content_type)
+    RecordingStudioGoogleDrive::DownloadedFile.new(
+      body: body,
+      filename: filename,
+      content_type: content_type
+    )
+  end
+
+  def imported_attachments
+    imported_ids = RecordingStudio::Recording.unscoped.where(
+      parent_recording_id: @recording.id,
+      recordable_type: "RecordingStudioAttachable::Attachment"
+    ).pluck(:recordable_id)
+    RecordingStudioAttachable::Attachment.where(id: imported_ids)
   end
 
   def authenticity_token
