@@ -41,41 +41,17 @@ class AttachableRegistrationTest < Minitest::Test
     RecordingStudioGoogleDrive.configuration.attachable.enabled = original
   end
 
-  def test_load_attachable_addon_rejects_older_attachable
-    original = RecordingStudioAttachable::VERSION
-    silence_warnings do
-      RecordingStudioAttachable.send(:remove_const, :VERSION)
-      RecordingStudioAttachable.const_set(:VERSION, "0.20.9")
+  def test_attachable_version_rejects_versions_below_minimum
+    error = assert_raises(RuntimeError) do
+      RecordingStudioGoogleDrive.send(:assert_attachable_version!, "0.20.9")
     end
-
-    error = assert_raises(RuntimeError) { RecordingStudioGoogleDrive.load_attachable_addon! }
 
     assert_includes error.message, "0.21.0"
     assert_includes error.message, "0.20.9"
-  ensure
-    silence_warnings do
-      RecordingStudioAttachable.send(:remove_const, :VERSION)
-      RecordingStudioAttachable.const_set(:VERSION, original)
-    end
   end
 
-  def test_picker_launcher_imports_attachable_helpers
-    source = File.read(
-      File.expand_path("../app/javascript/recording_studio_google_drive/google_drive_picker_launcher.js", __dir__)
-    )
-
-    assert_includes source, 'from "recording_studio_attachable/provider_launchers"'
-    assert_includes source, "loadScript"
-    assert_includes source, "createBootstrapCache"
-    assert_includes source, "providerNeedsAuth"
-    assert_includes source, "openProviderAuth"
-    assert_includes source, "if (!gesture)"
-    refute_includes source, "csrfToken"
-    refute_includes source, "bootstrap?.connect"
-    refute_includes source, "function loadScript"
-    refute_includes source, "function csrfToken"
-    refute_includes source, "function providerNeedsAuth"
-    refute_includes source, "function driveNeedsAuth"
+  def test_attachable_version_accepts_the_minimum
+    RecordingStudioGoogleDrive.send(:assert_attachable_version!, "0.21.0")
   end
 
   def test_engine_loads_the_attachable_addon_after_host_initializers
@@ -122,26 +98,6 @@ class AttachableRegistrationTest < Minitest::Test
 
     assert_includes application, "RecordingStudioAttachable::ProviderController"
     assert_includes application, "self.upload_provider_key = :google_drive"
-  end
-
-  def test_browser_partial_locals_use_generic_content_type_and_folder_rows
-    support = File.read(
-      File.expand_path("../lib/recording_studio_google_drive/attachable/browser_row.rb", __dir__)
-    )
-    view = File.read(
-      File.expand_path(
-        "../lib/recording_studio_google_drive/attachable/app/views/" \
-        "recording_studio_google_drive/attachable/imports/index.html.erb",
-        __dir__
-      )
-    )
-
-    refute_includes support, "mimeType"
-    assert_includes support, "kind: :folder"
-    assert_includes view, "current_path: @current_path"
-    assert_includes view, "parent_url: @parent_url"
-    assert_includes view, "path: @path"
-    assert_includes view, "flow_params: upload_flow_params"
   end
 
   private

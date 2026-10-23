@@ -140,6 +140,8 @@ class AttachableRemoteImportTest < Minitest::Test
   end
 
   def success_result
-    RecordingStudioAttachable::Services::BaseService::Result.new(success: true, value: [:ok])
+    result = Object.new
+    result.define_singleton_method(:success?) { true }
+    result
   end
 end

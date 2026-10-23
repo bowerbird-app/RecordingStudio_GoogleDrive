@@ -47,7 +47,7 @@ module RecordingStudioGoogleDrive
     end
 
     def load_attachable_engine!
-      assert_attachable_version!
+      assert_attachable_version!(RecordingStudioAttachable::VERSION)
       require "recording_studio_google_drive/attachable"
     end
 
@@ -63,13 +63,12 @@ module RecordingStudioGoogleDrive
 
     private
 
-    def assert_attachable_version!
-      version = Gem::Version.new(RecordingStudioAttachable::VERSION)
+    def assert_attachable_version!(version)
       required = Gem::Version.new(MINIMUM_ATTACHABLE_VERSION)
-      return unless version < required
+      return if Gem::Version.new(version) >= required
 
       raise "recording_studio_google_drive requires recording_studio_attachable >= #{required} " \
-            "(got #{version})"
+            "(got #{Gem::Version.new(version)})"
     end
 
     def oauth_credentials_blank?

@@ -51,6 +51,28 @@ class OauthProviderTest < Minitest::Test
     assert_equal true, captured[:refresh]
   end
 
+  def test_register_oauth_provider_raises_when_only_one_credential_is_blank
+    [
+      ["drive-client", nil, "client_secret is required"],
+      [nil, "drive-secret", "client_id is required"]
+    ].each do |client_id, client_secret, message|
+      RecordingStudioGoogleDrive.configuration.client_id = client_id
+      RecordingStudioGoogleDrive.configuration.client_secret = client_secret
+      Rails.stub(:application, blank_rails_credentials_app) do
+        error = assert_raises(ArgumentError) do
+          RecordingStudioOauth.stub(
+            :register_outbound_provider,
+            ->(**) { raise ArgumentError, message }
+          ) do
+            RecordingStudioGoogleDrive.register_oauth_provider!
+          end
+        end
+
+        assert_equal message, error.message
+      end
+    end
+  end
+
   def test_register_oauth_provider_does_not_swallow_oauth_errors
     RecordingStudioGoogleDrive.configuration.client_id = "drive-client"
     RecordingStudioGoogleDrive.configuration.client_secret = "drive-secret"

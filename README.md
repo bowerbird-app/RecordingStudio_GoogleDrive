@@ -83,7 +83,7 @@ Default page size is 25. Dummy and tests point authorize, token, and revoke URLs
 
 This gem owns Google Drive import for Recording Studio Attachable. Attachable stays provider-neutral. This gem does not depend on Attachable. The add-on loads only when `RecordingStudioAttachable` `>= 0.21.0` is present (`ActiveSupport.on_load(:recording_studio_attachable)`). Dummy and CI pin Attachable in the Gemfile.
 
-1. Optionally add `recording_studio_attachable` `>= 0.21.0, < 1.0`. Until Attachable 0.21.0 is tagged, pin Attachable to git ref `900cc3a169e26f0e4604e1acb3cbc1d81281aa87`.
+1. Optionally add `recording_studio_attachable` `>= 0.21.0, < 1.0`. Dummy and CI pin Attachable to tag `v0.21.0`.
 2. Enable Attachable on the recordable types that should accept files.
 3. Mount Attachable. This gem registers adapter routes at `/google_drive` (`as: :google_drive`), so host URLs and route helpers stay the same as Attachable's old in-tree Drive.
 4. Pin importmap modules `recording_studio_attachable/provider_launchers` and `recording_studio_google_drive/google_drive_picker_launcher`.
@@ -121,7 +121,7 @@ After seed, open `/recording_studio_attachable/recordings/<page-recording-id>/at
 
 ## Development
 
-Ruby 3.3.12. Rails 8.1. Recording Studio `~> 4.2` (dummy GitHub tag `v4.7.0`). Oauth `>= 0.14.1, < 1.0` (dummy GitHub tag `v0.14.1`). Attachable is optional (`>= 0.21.0, < 1.0`; dummy git ref `900cc3a169e26f0e4604e1acb3cbc1d81281aa87`).
+Ruby 3.3.12. Rails 8.1. Recording Studio `~> 4.2` (dummy GitHub tag `v4.7.0`). Oauth `>= 0.14.1, < 1.0` (dummy GitHub tag `v0.14.1`). Attachable is optional (`>= 0.21.0, < 1.0`; dummy and CI pin tag `v0.21.0`).
 
 ```bash
 bundle install
