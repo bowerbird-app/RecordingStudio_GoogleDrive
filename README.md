@@ -35,7 +35,7 @@ page.entries
 page.next_cursor
 page.more?
 
-page = client.search(query: "brief", cursor: page.next_cursor)
+page = client.search(query: "brief", cursor: page.next_cursor, parent_id: "folder-id")
 file = client.fetch_file("file-id")
 downloaded = client.download("file-id")
 uploaded = client.upload_file(
@@ -61,7 +61,7 @@ No connection, a connection that needs reconnecting, or a failed refresh raises 
 
 Tests and hosts that already have a token object can still pass `token_provider:` (a callable, or an object that responds to `access_token`). A raw String is a misconfiguration. A blank token at request time raises `ReconnectRequired`.
 
-`list` and `search` return a `Page`. Ask for the next page with `cursor:`. Search is a Drive `name contains` clause. Folders are included so callers can browse. Trashed files stay out.
+`list` and `search` return a `Page`. Ask for the next page with `cursor:`. Search is a Drive `name contains` clause. Pass `parent_id:` to search or list inside a folder. Folders are included so callers can browse. Trashed files stay out.
 
 Download returns a `DownloadedFile` with `body`, `filename`, and `content_type`. Google Docs, Sheets, Slides, and Drawings go through Drive export. Docs and Slides become PDF. Sheets become CSV. Drawings become PNG. Other files download as binary.
 

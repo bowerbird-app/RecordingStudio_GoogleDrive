@@ -80,9 +80,6 @@ function accessTokenNearExpiry(bootstrap) {
 }
 
 function driveNeedsAuth(bootstrap) {
-  if (bootstrap?.needs_auth === true) return true
-  if (bootstrap?.access_token) return false
-
   return providerNeedsAuth(bootstrap)
 }
 

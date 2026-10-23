@@ -2,9 +2,8 @@
 <% if @next_page_token.present? %>
   <% next_page_url = google_drive.recording_imports_path(
        @recording,
-       **upload_flow_params,
-       page_token: @next_page_token,
-       query: @query
+       **(@browse_query || {}),
+       page_token: @next_page_token
      ) %>
 <% end %>
 
@@ -17,9 +16,11 @@
            connect_fields: connect_form_fields,
            files: @files,
            query: @query,
+           current_path: @current_path,
+           parent_url: @parent_url,
            next_page_url: next_page_url,
-           import_url: google_drive.recording_imports_path(@recording),
-           search_url: google_drive.recording_imports_path(@recording),
+           import_url: google_drive.recording_imports_path(@recording, **(@browse_query || {})),
+           search_url: google_drive.recording_imports_path(@recording, **(@browse_query || {})),
            disconnect_url: google_drive.recording_disconnect_path(@recording),
            recording: @recording,
            flow_params: upload_flow_params %>

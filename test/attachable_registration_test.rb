@@ -31,6 +31,8 @@ class AttachableRegistrationTest < Minitest::Test
     assert_includes source, "openProviderAuth"
     assert_includes source, "csrfToken"
     assert_includes source, "if (!gesture)"
+    assert_includes source, "return providerNeedsAuth(bootstrap)"
+    refute_includes source, "bootstrap?.connect"
     refute_includes source, "function loadScript"
     refute_includes source, "function csrfToken"
     refute_includes source, "function providerNeedsAuth"
@@ -81,6 +83,8 @@ class AttachableRegistrationTest < Minitest::Test
     assert_respond_to options[:reconnect_error], :call
     assert_equal true, options[:reconnect_error].call(RecordingStudioGoogleDrive::ReconnectRequired.new("x"))
     assert_equal false, options[:reconnect_error].call(StandardError.new("x"))
+    assert_keyword_only options[:connect]
+    assert_keyword_only options[:remote_importer]
   ensure
     RecordingStudioGoogleDrive.configuration.attachable.enabled = original
   end
@@ -96,5 +100,32 @@ class AttachableRegistrationTest < Minitest::Test
 
     assert_includes application, "RecordingStudioAttachable::ProviderController"
     assert_includes application, "self.upload_provider_key = :google_drive"
+  end
+
+  def test_browser_partial_locals_use_generic_content_type_and_folder_rows
+    support = File.read(
+      File.expand_path("../lib/recording_studio_google_drive/attachable/browser_row.rb", __dir__)
+    )
+    view = File.read(
+      File.expand_path(
+        "../lib/recording_studio_google_drive/attachable/app/views/" \
+        "recording_studio_google_drive/attachable/imports/index.html.erb",
+        __dir__
+      )
+    )
+
+    refute_includes support, "mimeType"
+    assert_includes support, "kind: :folder"
+    assert_includes view, "current_path: @current_path"
+    assert_includes view, "parent_url: @parent_url"
+  end
+
+  private
+
+  def assert_keyword_only(callable)
+    types = callable.parameters.map(&:first)
+    refute_includes types, :req
+    refute_includes types, :opt
+    assert types.intersect?(%i[key keyreq keyrest])
   end
 end

@@ -112,6 +112,9 @@ class GoogleDriveAttachableTest < ActionDispatch::IntegrationTest
       get google_drive.recording_imports_path(@recording)
       assert_response :success
       assert_includes response.body, "Brief.pdf"
+      assert_includes response.body, "Briefs"
+      assert_includes response.body, "application/pdf"
+      refute_includes response.body, "mimeType"
 
       post google_drive.recording_imports_path(@recording), params: { file_ids: ["file-1"] }
       assert_nil flash[:alert], flash[:alert].to_s
@@ -206,9 +209,18 @@ class GoogleDriveAttachableTest < ActionDispatch::IntegrationTest
       filename: "Brief.pdf",
       content_type: "application/pdf"
     )
+    folder = RecordingStudioGoogleDrive::DriveFile.new(
+      id: "folder-1",
+      name: "Briefs",
+      mime_type: RecordingStudioGoogleDrive::FOLDER_MIME_TYPE,
+      size: nil,
+      modified_at: nil,
+      web_view_link: nil,
+      resource_key: nil
+    )
     client = Object.new
     client.define_singleton_method(:list) do |**|
-      RecordingStudioGoogleDrive::Page.new(entries: [drive_file], next_cursor: nil)
+      RecordingStudioGoogleDrive::Page.new(entries: [folder, drive_file], next_cursor: nil)
     end
     client.define_singleton_method(:fetch_file) { |_id, resource_key: nil| drive_file }
     client.define_singleton_method(:download) { |_id, resource_key: nil| downloaded }

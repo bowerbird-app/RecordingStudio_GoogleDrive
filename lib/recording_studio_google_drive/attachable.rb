@@ -3,6 +3,8 @@
 require "recording_studio_google_drive/attachable/engine"
 require "recording_studio_google_drive/attachable/integration"
 require "recording_studio_google_drive/attachable/remote_import"
+require "recording_studio_google_drive/attachable/browser_row"
+require "recording_studio_google_drive/attachable/browser_location"
 
 module RecordingStudioGoogleDrive
   module Attachable
@@ -66,7 +68,7 @@ module RecordingStudioGoogleDrive
       )
     end
 
-    def connect_payload(recording:, context:)
+    def connect_payload(*, recording:, context:)
       Integration.connect_payload(recording: recording, context: context)
     end
 
@@ -77,11 +79,22 @@ module RecordingStudioGoogleDrive
     def visible?(**)
       RecordingStudioGoogleDrive.configuration.attachable.picker_configured?
     end
+
+    def register_adapter_routes!
+      return if adapter_routes_registered?
+
+      @adapter_routes_registered = true
+      RecordingStudioAttachable.register_adapter_routes(:google_drive) do
+        mount RecordingStudioGoogleDrive::Attachable::Engine, at: "/google_drive", as: :google_drive
+      end
+    end
+
+    def adapter_routes_registered?
+      @adapter_routes_registered == true
+    end
   end
 end
 
 ActiveSupport.on_load(:recording_studio_attachable) do
-  RecordingStudioAttachable.register_adapter_routes(:google_drive) do
-    mount RecordingStudioGoogleDrive::Attachable::Engine, at: "/google_drive", as: :google_drive
-  end
+  RecordingStudioGoogleDrive::Attachable.register_adapter_routes!
 end

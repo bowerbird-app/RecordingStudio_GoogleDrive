@@ -74,6 +74,17 @@ class ClientTest < Minitest::Test
     assert_equal "trashed = false and 'root' in parents", query_params(requests.first.uri).fetch("q")
   end
 
+  def test_search_can_stay_inside_a_parent_folder
+    requests = stub_list_page("files" => [])
+
+    client.search(query: "brief", parent_id: "folder-1")
+
+    assert_equal(
+      "trashed = false and 'folder-1' in parents and name contains 'brief'",
+      query_params(requests.first.uri).fetch("q")
+    )
+  end
+
   def test_fetch_file_returns_metadata_and_encodes_the_id
     stub_request(:get, %r{https://www.googleapis.com/drive/v3/files/file%2F1})
       .to_return(json_http(

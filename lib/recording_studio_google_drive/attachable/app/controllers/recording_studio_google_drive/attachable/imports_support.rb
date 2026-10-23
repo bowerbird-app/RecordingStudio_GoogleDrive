@@ -3,31 +3,25 @@
 module RecordingStudioGoogleDrive
   module Attachable
     module ImportsSupport
+      include ImportsErrors
+
       private
 
       def load_drive_page
         @query = params[:query].to_s.strip
-        page = drive_listing_page
+        page = browser_location.fetch_page(
+          client: google_drive_client,
+          cursor: params[:page_token],
+          page_size: attachable_config.page_size
+        )
         @files = listed_files(page)
         @next_page_token = page.next_cursor
-      end
-
-      def drive_listing_page
-        client = google_drive_client
-        cursor = params[:page_token]
-        page_size = attachable_config.page_size
-        if @query.present?
-          client.search(query: @query, cursor: cursor, page_size: page_size)
-        else
-          client.list(cursor: cursor, page_size: page_size)
-        end
+        assign_browser_location
       end
 
       def listed_files(page)
-        Array(page.entries).filter_map do |file|
-          next if file.respond_to?(:folder?) && file.folder?
-
-          { "id" => file.id, "name" => file.name, "mimeType" => file.mime_type, "webViewLink" => file.web_view_link }
+        Array(page.entries).map do |file|
+          BrowserRow.from_drive_file(file, open_url: browser_location.open_folder_url(file))
         end
       end
 
@@ -60,59 +54,46 @@ module RecordingStudioGoogleDrive
         selection[:resource_key] || selection["resource_key"] || selection[:resourceKey] || selection["resourceKey"]
       end
 
-      def handle_index_drive_error(error)
-        return render_disconnected(reconnect: true) if Integration.reconnect_required?(error)
-        raise unless Integration.request_error?(error)
-
-        @query = params[:query].to_s.strip
-        @files = []
-        @next_page_token = nil
-        flash.now[:alert] = error.message
-        render :index, status: :bad_gateway
-      end
-
-      def handle_create_drive_error(error)
-        return respond_to_reconnect_error if Integration.reconnect_required?(error)
-        raise unless Integration.request_error?(error)
-
-        respond_to_request_error(error)
-      end
-
-      def respond_to_request_error(error)
-        respond_to do |format|
-          format.json { render json: { error: error.message }, status: :unprocessable_content }
-          format.html do
-            redirect_to google_drive.recording_imports_path(@recording, upload_flow_params), alert: error.message
-          end
-        end
-      end
-
-      def respond_to_reconnect_error
-        respond_to do |format|
-          format.json { render json: reconnect_json, status: :unauthorized }
-          format.html { render_disconnected(reconnect: true) }
-        end
-      end
-
-      def reconnect_json
-        { error: reconnect_message }.merge(provider_connect_payload(needs_auth: true, reconnect: true))
-      end
-
-      def reconnect_message
-        RecordingStudioAttachable::Copy.t(
-          "providers.reconnect_to_continue",
-          provider: provider_label,
-          default: "Reconnect #{provider_label} to continue"
-        )
-      end
-
       def render_disconnected(reconnect: google_drive_reconnect?)
         @query = params[:query].to_s.strip
         @files = []
         @next_page_token = nil
         @show_connect = true
         @reconnect = reconnect
+        assign_browser_location
         render :index
+      end
+
+      def assign_browser_location
+        @current_path = browser_location.current_path
+        @parent_url = browser_location.parent_url
+        @browse_query = browse_query
+      end
+
+      def browse_query
+        upload_flow_params.merge(browser_location.query_params)
+      end
+
+      def browser_location
+        @browser_location ||= BrowserLocation.new(
+          folder_ids: params[:folder_ids],
+          folder_names: params[:folder_names],
+          query: @query || params[:query],
+          root_name: provider_label,
+          url_builder: method(:folder_imports_url)
+        )
+      end
+
+      def folder_imports_url(ids:, names:)
+        google_drive.recording_imports_path(@recording, **folder_query(ids, names))
+      end
+
+      def folder_query(ids, names)
+        upload_flow_params.merge(
+          query: (@query || params[:query]).to_s.presence,
+          folder_ids: ids.presence,
+          folder_names: names.presence
+        ).compact
       end
     end
   end

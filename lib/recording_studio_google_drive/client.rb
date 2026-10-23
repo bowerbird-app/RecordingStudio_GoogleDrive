@@ -27,11 +27,11 @@ module RecordingStudioGoogleDrive
       )
     end
 
-    def search(query:, cursor: nil, page_size: nil)
+    def search(query:, cursor: nil, page_size: nil, parent_id: nil)
       Listing.page(
         http,
         query: query,
-        parent_id: nil,
+        parent_id: parent_id,
         cursor: cursor,
         page_size: resolved_page_size(page_size)
       )

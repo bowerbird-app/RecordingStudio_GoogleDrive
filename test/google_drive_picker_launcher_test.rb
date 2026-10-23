@@ -38,7 +38,11 @@ class GoogleDrivePickerLauncherTest < Minitest::Test
 
   def run_node_launcher_harness
     Dir.mktmpdir("google-drive-launcher-test") do |dir|
-      File.write(File.join(dir, "provider_launchers.js"), browser_globals_prefix + File.read(attachable_launchers_path))
+      File.write(
+        File.join(dir, "provider_launchers_upstream.js"),
+        browser_globals_prefix + File.read(attachable_launchers_path)
+      )
+      File.write(File.join(dir, "provider_launchers.js"), needs_auth_only_launchers_shim)
       File.write(
         File.join(dir, "google_drive_picker_launcher.js"),
         browser_globals_prefix + File.read(launcher_path).sub(
@@ -49,6 +53,24 @@ class GoogleDrivePickerLauncherTest < Minitest::Test
       File.write(File.join(dir, "harness.mjs"), node_harness_source)
       Open3.capture3("node", File.join(dir, "harness.mjs"))
     end
+  end
+
+  def needs_auth_only_launchers_shim
+    <<~JS
+      export {
+        loadScript,
+        createBootstrapCache,
+        openProviderAuth,
+        csrfToken,
+        hideProviderContinueButton,
+        showProviderContinueButton,
+        registerUploadProviderLauncher
+      } from "./provider_launchers_upstream.js"
+
+      export function providerNeedsAuth(bootstrap) {
+        return Boolean(bootstrap?.needs_auth)
+      }
+    JS
   end
 
   def browser_globals_prefix

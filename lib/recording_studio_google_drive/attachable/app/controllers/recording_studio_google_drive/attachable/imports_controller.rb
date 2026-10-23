@@ -64,7 +64,7 @@ module RecordingStudioGoogleDrive
       end
 
       def imports_path
-        google_drive.recording_imports_path(@recording, upload_flow_params)
+        google_drive.recording_imports_path(@recording, browse_query)
       end
 
       def respond_to_successful_html_import(result)
