@@ -20,14 +20,16 @@
       <div class="flex flex-wrap gap-3">
         <% if @drive_connection.nil? %>
           <%= form_with url: recording_studio_oauth.outbound_connect_path(provider: drive_provider_key), method: :post do %>
-            <%= hidden_field_tag :owner, "user" %>
+            <%= hidden_field_tag :owner, "root" %>
+            <%= hidden_field_tag :root_recording_id, @workspace_root.id if @workspace_root %>
             <%= hidden_field_tag :return_to, root_path %>
             <%= render FlatPack::Button::Component.new(text: "Connect Google Drive", style: :primary, size: :md, type: "submit") %>
           <% end %>
         <% else %>
           <% if @drive_connection.needs_reconnect? || !@drive_ready %>
             <%= form_with url: recording_studio_oauth.outbound_connect_path(provider: drive_provider_key), method: :post do %>
-              <%= hidden_field_tag :owner, "user" %>
+              <%= hidden_field_tag :owner, "root" %>
+              <%= hidden_field_tag :root_recording_id, @workspace_root.id if @workspace_root %>
               <%= hidden_field_tag :return_to, root_path %>
               <%= render FlatPack::Button::Component.new(text: "Reconnect", style: :danger, size: :md, type: "submit") %>
             <% end %>

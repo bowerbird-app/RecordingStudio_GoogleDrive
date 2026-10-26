@@ -34,3 +34,5 @@ RecordingStudioGoogleDrive.configure do |config|
   config.attachable.api_key = api_key.presence || "dummy-google-drive-picker-api-key"
   config.attachable.app_id = app_id.presence || "dummy-google-drive-picker-app-id"
 end
+
+RecordingStudioGoogleDrive.register_oauth_provider

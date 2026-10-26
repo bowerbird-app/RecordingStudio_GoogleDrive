@@ -13,3 +13,5 @@ RecordingStudioGoogleDrive.configure do |config|
   # config.attachable.api_key = Rails.application.credentials.dig(:google_drive, :api_key)
   # config.attachable.app_id = Rails.application.credentials.dig(:google_drive, :app_id)
 end
+
+RecordingStudioGoogleDrive.register_oauth_provider

@@ -4,10 +4,11 @@ This gem talks to the Google Drive API for Recording Studio. It lists and search
 
 ## Setup
 
-1. Add the gem and pin Oauth `v0.15.1`.
+1. Add the gem and pin Oauth `v0.17.0`.
 2. Run `bin/rails generate recording_studio_google_drive:install`.
 3. Install and migrate Recording Studio Oauth (`recording_studio_oauth:install` and `recording_studio_oauth:migrations`).
-4. Set Google OAuth app credentials. Name the keys. Do not put the values in git, chat, or this README.
+4. Register Google Drive from the host initializer. The gem does not register itself.
+5. Set Google OAuth app credentials. Name the keys. Do not put the values in git, chat, or this README.
 
 ```yaml
 # Rails credentials. Name the keys. Set the values in the host secret store.
@@ -18,7 +19,14 @@ recording_studio_oauth:
       client_secret:
 ```
 
-The gem registers `:google_drive` with Oauth on boot. It skips that registration only when both `client_id` and `client_secret` are blank (this gem's config or `recording_studio_oauth.outbound.google_drive`), so a host without Drive credentials still boots. Authorize URL, token URL, revoke URL, Drive scopes, PKCE, and refresh are the defaults. `access_type=offline` and `prompt=consent` are sent so Google issues a refresh token.
+Google Drive is a root plugin. A workspace admin connects it once for the workspace. The host registers it with Oauth:
+
+```ruby
+# config/initializers/recording_studio_google_drive.rb
+RecordingStudioGoogleDrive.register_oauth_provider
+```
+
+That call uses Oauth's public registry with `kind: :root`. It skips registration only when both `client_id` and `client_secret` are blank (this gem's config, keyword overrides, or `recording_studio_oauth.outbound.google_drive`), so a host without Drive credentials still boots. Other Oauth errors still raise. Authorize URL, token URL, revoke URL, Drive scopes, PKCE, and refresh are the defaults. `access_type=offline` and `prompt=consent` are sent so Google issues a refresh token.
 
 ## Client
 
@@ -121,7 +129,7 @@ After seed, open `/recording_studio_attachable/recordings/<page-recording-id>/at
 
 ## Development
 
-Ruby 3.3.12. Rails 8.1. Recording Studio `~> 4.2` (dummy GitHub tag `v4.7.0`). Oauth `>= 0.14.1, < 1.0` (dummy GitHub tag `v0.15.1`). Attachable is optional (`>= 0.21.0, < 1.0`; dummy and CI pin tag `v0.21.0`). Dummy and CI also pin API `v0.16.0`, Logs `v0.7.0`, and Metrics `v0.6.1`.
+Ruby 3.3.12. Rails 8.1. Recording Studio `~> 4.2` (dummy GitHub tag `v4.7.0`). Oauth `>= 0.17.0, < 1.0` (dummy GitHub tag `v0.17.0`). Attachable is optional (`>= 0.21.0, < 1.0`; dummy and CI pin tag `v0.21.0`). Dummy and CI also pin API `v0.16.0`, Logs `v0.7.0`, and Metrics `v0.6.1`.
 
 ```bash
 bundle install

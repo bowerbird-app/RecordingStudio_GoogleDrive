@@ -32,11 +32,6 @@ module RecordingStudioGoogleDrive
       app.config.assets.paths << root.join("app/javascript")
     end
 
-    initializer "recording_studio_google_drive.register_oauth_provider",
-                after: :load_config_initializers do
-      RecordingStudioGoogleDrive.register_oauth_provider!
-    end
-
     initializer "recording_studio_google_drive.load_attachable_addon",
                 after: :load_config_initializers,
                 before: "recording_studio_attachable.adapter_routes" do

@@ -25,27 +25,33 @@ class OauthProviderTest < Minitest::Test
     refute attrs.key?(:client_id)
     refute attrs.key?(:client_secret)
     refute attrs.key?(:http)
+    refute attrs.key?(:kind)
   end
 
-  def test_engine_boots_without_oauth_credentials
+  def test_register_oauth_provider_skips_when_credentials_are_blank
     RecordingStudioGoogleDrive.configuration.client_id = nil
     RecordingStudioGoogleDrive.configuration.client_secret = nil
-    app = blank_rails_credentials_app
+    registered = false
 
-    Rails.stub(:application, app) do
-      find_oauth_initializer.block.call(Object.new)
+    Rails.stub(:application, blank_rails_credentials_app) do
+      RecordingStudioOauth.stub(:register_outbound_provider, ->(**) { registered = true }) do
+        RecordingStudioGoogleDrive.register_oauth_provider
+      end
     end
+
+    refute registered
   end
 
-  def test_engine_registers_oauth_when_credentials_are_present
+  def test_register_oauth_provider_registers_kind_root
     RecordingStudioGoogleDrive.configuration.client_id = "drive-client"
     RecordingStudioGoogleDrive.configuration.client_secret = "drive-secret"
     captured = nil
     RecordingStudioOauth.stub(:register_outbound_provider, ->(**attrs) { captured = attrs }) do
-      find_oauth_initializer.block.call(Object.new)
+      RecordingStudioGoogleDrive.register_oauth_provider
     end
 
     assert_equal :google_drive, captured[:key]
+    assert_equal :root, captured[:kind]
     assert_equal "drive-client", captured[:client_id]
     assert_equal "drive-secret", captured[:client_secret]
     assert_equal true, captured[:refresh]
@@ -68,7 +74,7 @@ class OauthProviderTest < Minitest::Test
               raise ArgumentError, message
             }
           ) do
-            RecordingStudioGoogleDrive.register_oauth_provider!
+            RecordingStudioGoogleDrive.register_oauth_provider
           end
         end
 
@@ -87,7 +93,7 @@ class OauthProviderTest < Minitest::Test
         :register_outbound_provider,
         ->(**) { raise ArgumentError, "authorize_url is required" }
       ) do
-        RecordingStudioGoogleDrive.register_oauth_provider!
+        RecordingStudioGoogleDrive.register_oauth_provider
       end
     end
 
@@ -127,17 +133,21 @@ class OauthProviderTest < Minitest::Test
     captured = nil
     Rails.stub(:application, app) do
       RecordingStudioOauth.stub(:register_outbound_provider, ->(**attrs) { captured = attrs }) do
-        RecordingStudioGoogleDrive.register_oauth_provider!
+        RecordingStudioGoogleDrive.register_oauth_provider
       end
     end
 
     assert_equal :google_drive, captured[:key]
+    assert_equal :root, captured[:kind]
   end
 
-  def test_engine_registers_the_oauth_provider_after_host_initializers
+  def test_engine_does_not_register_the_oauth_provider
     names = RecordingStudioGoogleDrive::Engine.initializers.map(&:name)
+    source = File.read(File.expand_path("../lib/recording_studio_google_drive/engine.rb", __dir__))
 
-    assert_includes names, "recording_studio_google_drive.register_oauth_provider"
+    refute_includes names, "recording_studio_google_drive.register_oauth_provider"
+    refute_includes source, "register_oauth_provider"
+    refute_includes source, "register_outbound_provider"
   end
 
   def test_gemspec_pins_oauth_below_1_0
@@ -145,9 +155,9 @@ class OauthProviderTest < Minitest::Test
     gemfile = File.read(File.expand_path("../Gemfile", __dir__))
     dummy_gemfile = File.read(File.expand_path("dummy/Gemfile", __dir__))
 
-    assert_includes gemspec, 'spec.add_dependency "recording_studio_oauth", ">= 0.14.1", "< 1.0"'
-    assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_Oauth", tag: "v0.15.1"'
-    assert_includes dummy_gemfile, 'github: "bowerbird-app/RecordingStudio_Oauth", tag: "v0.15.1"'
+    assert_includes gemspec, 'spec.add_dependency "recording_studio_oauth", ">= 0.17.0", "< 1.0"'
+    assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_Oauth", tag: "v0.17.0"'
+    assert_includes dummy_gemfile, 'github: "bowerbird-app/RecordingStudio_Oauth", tag: "v0.17.0"'
   end
 
   private
@@ -167,12 +177,6 @@ class OauthProviderTest < Minitest::Test
   def restore_config(values)
     config = RecordingStudioGoogleDrive.configuration
     values.each { |key, value| config.public_send("#{key}=", value) }
-  end
-
-  def find_oauth_initializer
-    RecordingStudioGoogleDrive::Engine.initializers.find do |initializer|
-      initializer.name == "recording_studio_google_drive.register_oauth_provider"
-    end
   end
 
   def blank_rails_credentials_app

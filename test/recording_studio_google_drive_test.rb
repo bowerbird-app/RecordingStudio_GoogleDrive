@@ -4,7 +4,7 @@ require "test_helper"
 
 class RecordingStudioGoogleDriveTest < Minitest::Test
   def test_version_matches_release
-    assert_equal "0.4.1", ::RecordingStudioGoogleDrive::VERSION
+    assert_equal "0.5.0", ::RecordingStudioGoogleDrive::VERSION
   end
 
   def test_engine_exists
@@ -17,7 +17,7 @@ class RecordingStudioGoogleDriveTest < Minitest::Test
     gemfile = File.read(File.expand_path("../Gemfile", __dir__))
 
     assert_includes gemspec, 'spec.add_dependency "recording_studio", "~> 4.2"'
-    assert_includes gemspec, 'spec.add_dependency "recording_studio_oauth", ">= 0.14.1", "< 1.0"'
+    assert_includes gemspec, 'spec.add_dependency "recording_studio_oauth", ">= 0.17.0", "< 1.0"'
     refute_includes gemspec, "recording_studio_attachable"
     assert_includes gemfile, "recording_studio_attachable"
     assert_includes gemfile, 'tag: "v0.21.0"'
@@ -58,10 +58,10 @@ class RecordingStudioGoogleDriveTest < Minitest::Test
     assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_accessible", tag: "v0.18.0"'
     assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_trashable", tag: "v0.11.0", require: false'
     refute_includes gemfile, 'tag: "v0.10.0"'
-    refute_includes gemfile, 'tag: "v0.17.0"'
+    refute_includes gemfile, 'github: "bowerbird-app/RecordingStudio_accessible", tag: "v0.17.0"'
     refute_includes gemfile, 'github: "bowerbird-app/RecordingStudio_accessible", tag: "v0.15.0"'
     refute_includes gemfile, 'tag: "v0.10.1"'
-    assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_Oauth", tag: "v0.15.1"'
+    assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_Oauth", tag: "v0.17.0"'
     assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_admin", tag: "v2.2.0"'
     assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_root_switchable", tag: "v0.9.0"'
     assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_cache", tag: "v0.5.0"'
@@ -74,7 +74,7 @@ class RecordingStudioGoogleDriveTest < Minitest::Test
     refute_includes gemfile, 'tag: "v0.6.0"'
     refute_includes gemfile, 'tag: "v0.5.1"'
     assert_includes gemfile, 'github: "bowerbird-app/flatpack", tag: "v0.1.213"'
-    assert_includes root_gemfile, 'github: "bowerbird-app/RecordingStudio_Oauth", tag: "v0.15.1"'
+    assert_includes root_gemfile, 'github: "bowerbird-app/RecordingStudio_Oauth", tag: "v0.17.0"'
     assert_includes root_gemfile, 'github: "bowerbird-app/RecordingStudio_api", tag: "v0.16.0"'
     assert_includes root_gemfile, 'github: "bowerbird-app/RecordingStudio_logs", tag: "v0.7.0"'
     assert_includes root_gemfile, 'github: "bowerbird-app/RecordingStudio_metrics", tag: "v0.6.1"'
@@ -241,6 +241,8 @@ class RecordingStudioGoogleDriveTest < Minitest::Test
     assert_includes readme, "Client.for"
     assert_includes readme, "picker_access_token"
     assert_includes readme, "Hand it to the Picker only"
+    assert_includes readme, "RecordingStudioGoogleDrive.register_oauth_provider"
+    assert_includes readme, "kind: :root"
     assert_includes readme, "recording_studio_oauth.outbound.google_drive"
     assert_includes readme, "client_id"
     assert_includes readme, "client_secret"
@@ -332,6 +334,7 @@ class RecordingStudioGoogleDriveTest < Minitest::Test
     assert_includes initializer, "recording_studio_oauth"
     assert_includes initializer, ":outbound"
     assert_includes initializer, ":google_drive"
+    assert_includes initializer, "RecordingStudioGoogleDrive.register_oauth_provider"
     refute_includes initializer, "nested[:client_id]"
     refute_includes initializer, "nested[:client_secret]"
   end

@@ -43,6 +43,14 @@ class InstallGeneratorTest < Minitest::Test
   def test_install_guide_describes_library_setup
     install_guide = File.read(INSTALL_TEMPLATE_PATH)
 
+    initializer = File.read(
+      File.expand_path(
+        "../lib/generators/recording_studio_google_drive/install/templates/recording_studio_google_drive_initializer.rb",
+        __dir__
+      )
+    )
+    assert_includes initializer, "RecordingStudioGoogleDrive.register_oauth_provider"
+
     assert_includes install_guide, "Client.for"
     assert_includes install_guide, "client_id"
     assert_includes install_guide, "config.attachable.enabled"
