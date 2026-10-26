@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_23_120000) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_26_120001) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "pgcrypto"
@@ -193,40 +193,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_23_120000) do
     t.index ["metric_date"], name: "index_recording_studio_api_api_daily_metrics_on_metric_date"
   end
 
-  create_table "recording_studio_api_api_request_day_summaries", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
-    t.date "day", null: false
-    t.uuid "root_recording_id"
-    t.string "api_key", null: false
-    t.string "route_name", null: false
-    t.string "request_method", null: false
-    t.integer "status_code", null: false
-    t.boolean "rate_limited", default: false, null: false
-    t.bigint "request_count", default: 0, null: false
-    t.bigint "duration_sum_ms", default: 0, null: false
-    t.bigint "duration_max_ms", default: 0, null: false
-    t.datetime "created_at", null: false
-    t.datetime "updated_at", null: false
-    t.index ["api_key", "day"], name: "index_rs_api_request_day_summaries_on_api_and_day"
-    t.index ["day", "root_recording_id", "api_key", "route_name", "request_method", "status_code", "rate_limited"], name: "index_rs_api_request_day_summaries_identity", unique: true, nulls_not_distinct: true
-    t.index ["root_recording_id", "day"], name: "index_rs_api_request_day_summaries_on_root_and_day"
-  end
-
-  create_table "recording_studio_api_api_request_latency_day_summaries", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
-    t.date "day", null: false
-    t.uuid "root_recording_id"
-    t.string "api_key", null: false
-    t.string "route_name", null: false
-    t.string "request_method", null: false
-    t.integer "status_code", null: false
-    t.integer "latency_bucket_ms", null: false
-    t.bigint "request_count", default: 0, null: false
-    t.datetime "created_at", null: false
-    t.datetime "updated_at", null: false
-    t.index ["api_key", "day"], name: "index_rs_api_request_latency_day_summaries_on_api_and_day"
-    t.index ["day", "root_recording_id", "api_key", "route_name", "request_method", "status_code", "latency_bucket_ms"], name: "index_rs_api_request_latency_day_summaries_identity", unique: true, nulls_not_distinct: true
-    t.index ["root_recording_id", "day"], name: "index_rs_api_request_latency_day_summaries_on_root_and_day"
-  end
-
   create_table "recording_studio_api_api_request_logs", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
     t.datetime "occurred_at", null: false
     t.string "request_id"
@@ -322,13 +288,13 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_23_120000) do
 
   create_table "recording_studio_logs_aggregation_runs", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
     t.string "aggregation_name", null: false
-    t.date "day", null: false
     t.string "status", null: false
     t.text "error_message"
     t.datetime "finished_at"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
-    t.index ["aggregation_name", "day"], name: "index_rs_logs_aggregation_runs_on_name_and_day", unique: true
+    t.datetime "period_start", null: false
+    t.index ["aggregation_name", "period_start"], name: "index_rs_logs_aggregation_runs_on_name_and_period", unique: true
   end
 
   create_table "recording_studio_logs_maintenance_runs", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|

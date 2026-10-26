@@ -29,7 +29,7 @@ Then open the app and sign in with:
 - Email: `admin@admin.com`
 - Password: `Password`
 
-Without Google secrets, dummy registers `:google_drive` against `/fake_oauth/*`. For a real Drive import, set `attachable.google_drive.*` or `google_drive.*` in Rails credentials, or `GOOGLE_DRIVE_CLIENT_ID`, `GOOGLE_DRIVE_CLIENT_SECRET`, `GOOGLE_DRIVE_API_KEY`, and `GOOGLE_DRIVE_APP_ID`. `RAILS_DEVELOPMENT_HOSTS` adds allowed hosts.
+Without Google secrets, dummy registers `:google_drive` against `/fake_oauth/*`. For a real Drive import, set `recording_studio_oauth.outbound.google_drive` (`client_id`, `client_secret`) and picker keys on `attachable.google_drive` or `google_drive` (`api_key`, `app_id`), or `GOOGLE_DRIVE_CLIENT_ID`, `GOOGLE_DRIVE_CLIENT_SECRET`, `GOOGLE_DRIVE_API_KEY`, and `GOOGLE_DRIVE_APP_ID`. `RAILS_DEVELOPMENT_HOSTS` adds allowed hosts.
 
 ## Useful Routes
 

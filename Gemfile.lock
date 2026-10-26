@@ -8,16 +8,16 @@ GIT
 
 GIT
   remote: https://github.com/bowerbird-app/RecordingStudio_Oauth.git
-  revision: bb4b66357d70f12d658ac06ca136383ee38cefba
-  tag: v0.14.1
+  revision: 56ea35d63b8257b3b9e3dc15297bff2df816fe9d
+  tag: v0.15.1
   specs:
-    recording_studio_oauth (0.14.1)
+    recording_studio_oauth (0.15.1)
       flat_pack (~> 0.1.198)
       rails (~> 8.1.0)
       recording_studio (~> 4.2)
       recording_studio_accessible (~> 0.11)
       recording_studio_admin (~> 2.0)
-      recording_studio_api (>= 0.5.2, < 0.15)
+      recording_studio_api (>= 0.5.2, < 0.17)
       recording_studio_cache (~> 0.5)
       recording_studio_metrics (>= 0.3, < 1.0)
       recording_studio_site_settings (~> 0.2)
@@ -45,15 +45,15 @@ GIT
 
 GIT
   remote: https://github.com/bowerbird-app/RecordingStudio_api.git
-  revision: 5fdacf1682f55e1bc10652cd6f55a16ee75d4f15
-  tag: v0.14.0
+  revision: 62ef31dbc066fa877b5cb088607deb2ad20220ae
+  tag: v0.16.0
   specs:
-    recording_studio_api (0.14.0)
+    recording_studio_api (0.16.0)
       rails (~> 8.1.0)
       recording_studio (~> 4.2)
       recording_studio_accessible (~> 0.11)
-      recording_studio_logs (~> 0.4.1)
-      recording_studio_metrics (>= 0.3.0, < 0.6)
+      recording_studio_logs (>= 0.4.1, < 1.0)
+      recording_studio_metrics (>= 0.3.0, < 1.0)
       recording_studio_trashable (~> 0.10)
       redis (~> 5.3)
 
@@ -79,19 +79,20 @@ GIT
 
 GIT
   remote: https://github.com/bowerbird-app/RecordingStudio_logs.git
-  revision: 6f612ceba651b285f4452583617d5d5b866f3e56
-  tag: v0.4.1
+  revision: 3127366cfccc882b20a01f76811adc8c055e248d
+  tag: v0.7.0
   specs:
-    recording_studio_logs (0.4.1)
+    recording_studio_logs (0.7.0)
       rails (~> 8.1.0)
       recording_studio (~> 4.2)
+      recording_studio_metrics (~> 0.6.1)
 
 GIT
   remote: https://github.com/bowerbird-app/RecordingStudio_metrics.git
-  revision: b3ff62dbee7e4e1107e3e41cdae7b2481893ca51
-  tag: v0.5.0
+  revision: 05e78289bbe3d9a90507c4cb4d7ba990edc57227
+  tag: v0.6.1
   specs:
-    recording_studio_metrics (0.5.0)
+    recording_studio_metrics (0.6.1)
       rails (~> 8.1.0)
       recording_studio (~> 4.2)
 
@@ -133,7 +134,7 @@ GIT
 PATH
   remote: .
   specs:
-    recording_studio_google_drive (0.4.0)
+    recording_studio_google_drive (0.4.1)
       rails (~> 8.1.0)
       recording_studio (~> 4.2)
       recording_studio_oauth (>= 0.14.1, < 1.0)
@@ -548,13 +549,13 @@ CHECKSUMS
   recording_studio (4.7.0)
   recording_studio_accessible (0.18.0)
   recording_studio_admin (2.2.0)
-  recording_studio_api (0.14.0)
+  recording_studio_api (0.16.0)
   recording_studio_attachable (0.21.0)
   recording_studio_cache (0.5.0)
-  recording_studio_google_drive (0.4.0)
-  recording_studio_logs (0.4.1)
-  recording_studio_metrics (0.5.0)
-  recording_studio_oauth (0.14.1)
+  recording_studio_google_drive (0.4.1)
+  recording_studio_logs (0.7.0)
+  recording_studio_metrics (0.6.1)
+  recording_studio_oauth (0.15.1)
   recording_studio_site_settings (0.2.0)
   recording_studio_trashable (0.11.0)
   redis (5.4.1) sha256=b5e675b57ad22b15c9bcc765d5ac26f60b675408af916d31527af9bd5a81faae

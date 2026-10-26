@@ -85,13 +85,19 @@ class ConfigurationTest < Minitest::Test
     assert_includes @configuration.attachable.inspect, "app_id=[FILTERED]"
   end
 
-  def test_inspect_and_to_s_redact_client_secret
+  def test_inspect_and_to_s_redact_client_id_and_client_secret
+    client_id = "dummy-fake-drive-client"
     secret = "dummy-fake-drive-secret"
+    @configuration.client_id = client_id
     @configuration.client_secret = secret
 
+    refute_includes @configuration.inspect, client_id
     refute_includes @configuration.inspect, secret
+    refute_includes @configuration.to_s, client_id
     refute_includes @configuration.to_s, secret
+    assert_includes @configuration.inspect, "client_id=[FILTERED]"
     assert_includes @configuration.inspect, "client_secret=[FILTERED]"
+    assert_includes @configuration.to_s, "client_id=[FILTERED]"
     assert_includes @configuration.to_s, "client_secret=[FILTERED]"
   end
 end

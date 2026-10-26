@@ -5,8 +5,18 @@ module RecordingStudioGoogleDrive
     class ByteCap
       OVERSIZE = "Remote file exceeds maximum file size"
 
+      def self.reject_size!(size, max_bytes)
+        new(max_bytes).reject_size!(size)
+      end
+
       def initialize(max_bytes)
         @max_bytes = max_bytes
+      end
+
+      def reject_size!(size)
+        return if size.nil?
+
+        check!(size)
       end
 
       def read(response)

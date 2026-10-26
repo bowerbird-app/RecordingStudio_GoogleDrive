@@ -32,4 +32,17 @@ class HttpByteCapTest < Minitest::Test
     assert_equal RecordingStudioGoogleDrive::Http::ByteCap::OVERSIZE, error.message
     assert_empty appended
   end
+
+  def test_reject_size_skips_blank_cap_and_nil_size
+    RecordingStudioGoogleDrive::Http::ByteCap.reject_size!(100, nil)
+    RecordingStudioGoogleDrive::Http::ByteCap.reject_size!(nil, 10)
+  end
+
+  def test_reject_size_raises_when_metadata_exceeds_max_bytes
+    error = assert_raises(ArgumentError) do
+      RecordingStudioGoogleDrive::Http::ByteCap.reject_size!(11, 10)
+    end
+
+    assert_equal RecordingStudioGoogleDrive::Http::ByteCap::OVERSIZE, error.message
+  end
 end

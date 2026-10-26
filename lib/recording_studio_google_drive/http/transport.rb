@@ -3,8 +3,8 @@
 require "net/http"
 require "timeout"
 require "uri"
+require "recording_studio_google_drive/http/byte_cap"
 require "recording_studio_google_drive/http/connection"
-require "recording_studio_google_drive/http/limited_get"
 
 module RecordingStudioGoogleDrive
   class Http
@@ -16,51 +16,61 @@ module RecordingStudioGoogleDrive
       end
 
       def get(uri, follow_cross_host:)
-        start_request(
-          uri,
-          authorized_get(uri),
-          follow_cross_host: follow_cross_host,
-          redirects_remaining: MAX_REDIRECTS
-        )
+        perform(uri, authorized_get(uri), follow_cross_host: follow_cross_host)
       end
 
       def get_bytes(uri, follow_cross_host:, max_bytes: nil)
-        LimitedGet.new(access_token: access_token).call(
-          uri,
-          follow_cross_host: follow_cross_host,
-          max_bytes: max_bytes
-        )
+        perform(uri, authorized_get(uri), follow_cross_host: follow_cross_host) do |response|
+          ByteCap.new(max_bytes).read(response)
+        end
       end
 
       def post(uri, request, follow_cross_host:)
-        start_request(uri, request, follow_cross_host: follow_cross_host, redirects_remaining: MAX_REDIRECTS)
+        perform(uri, request, follow_cross_host: follow_cross_host)
       end
 
       private
 
       attr_reader :access_token
 
-      def start_request(uri, request, follow_cross_host:, redirects_remaining:)
+      def perform(uri, request, follow_cross_host:, redirects_remaining: MAX_REDIRECTS, &read_body)
         validate_request(uri, follow_cross_host: follow_cross_host, redirects_remaining: redirects_remaining)
-        response = ssl_start(uri) { |http| http.request(request) }
-        return response unless response.is_a?(Net::HTTPRedirection)
-        raise RequestError, "Google Drive request refused a redirect" unless request.method == "GET"
-
-        follow_redirect(uri, response, follow_cross_host: follow_cross_host, redirects_remaining: redirects_remaining)
+        ssl_start(uri) do |http|
+          http.request(request) do |response|
+            return complete(uri, request, response, follow_cross_host:, redirects_remaining:, &read_body)
+          end
+        end
       end
 
-      def follow_redirect(uri, response, follow_cross_host:, redirects_remaining:)
+      def complete(uri, request, response, follow_cross_host:, redirects_remaining:, &read_body)
+        if response.is_a?(Net::HTTPRedirection)
+          return follow_redirect(uri, request, response, follow_cross_host:, redirects_remaining:, &read_body)
+        end
+
+        finish(response, &read_body)
+      end
+
+      def follow_redirect(uri, request, response, follow_cross_host:, redirects_remaining:, &read_body)
         location = response["location"].to_s
-        return response if location.empty?
+        return finish(response, &read_body) if location.empty?
+        raise RequestError, "Google Drive request refused a redirect" unless request.method == "GET"
 
         redirected = URI.join(uri.to_s, location)
         refuse_cross_host_json_redirect!(uri, redirected, follow_cross_host)
-        start_request(
+        perform(
           redirected,
           authorized_get(redirected),
           follow_cross_host: follow_cross_host,
-          redirects_remaining: redirects_remaining - 1
+          redirects_remaining: redirects_remaining - 1,
+          &read_body
         )
+      end
+
+      def finish(response, &read_body)
+        return [response, read_body.call(response)] if read_body
+
+        response.body
+        response
       end
     end
   end
