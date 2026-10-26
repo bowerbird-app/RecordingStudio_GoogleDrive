@@ -47,13 +47,13 @@ class HttpTransportTest < Minitest::Test
   end
 
   def test_get_bytes_caps_body_on_redirect_with_empty_location
-    stub_request(:get, media_uri).to_return(status: 302, body: "x" * 20)
+    oversized = "x" * 20
+    stub_request(:get, media_uri).to_return(status: 302, body: oversized)
 
-    error = assert_raises(ArgumentError) do
-      transport.get_bytes(media_uri, follow_cross_host: true, max_bytes: 10)
-    end
+    response, body = transport.get_bytes(media_uri, follow_cross_host: true, max_bytes: 10)
 
-    assert_equal RecordingStudioGoogleDrive::Http::ByteCap::OVERSIZE, error.message
+    assert_kind_of Net::HTTPRedirection, response
+    assert_equal oversized, body
   end
 
   private

@@ -37,10 +37,7 @@ module RecordingStudioGoogleDrive
 
       def read_all(response)
         body = +"".b
-        each_chunk(response) do |chunk|
-          check!(body.bytesize + chunk.bytesize)
-          body << chunk
-        end
+        each_chunk(response) { |chunk| body << chunk }
         body
       end
 
