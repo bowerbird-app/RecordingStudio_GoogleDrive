@@ -63,7 +63,7 @@ module RecordingStudioGoogleDrive
         {
           authenticity_token: context.provider_csrf_token,
           owner: "root",
-          root_recording_id: root_for(recording).id,
+          root_recording_id: root_for(recording)&.id,
           return_to: helpers.recording_connected_path(recording, popup: 1)
         }
       end

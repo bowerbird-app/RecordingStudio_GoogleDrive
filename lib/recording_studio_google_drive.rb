@@ -35,16 +35,11 @@ module RecordingStudioGoogleDrive
       configuration
     end
 
-    def register_oauth_provider(**overrides)
-      return if oauth_credentials_blank?(overrides)
+    def register_oauth_provider
+      return if oauth_credentials_blank?
 
-      RecordingStudioOauth.register_outbound_provider(
-        **oauth_provider_attrs,
-        **overrides,
-        kind: :root
-      )
+      RecordingStudioOauth.register_outbound_provider(**oauth_provider_attrs, kind: :root)
     end
-    alias register_oauth_provider! register_oauth_provider
 
     def oauth_provider_attrs
       configuration.oauth_provider_attrs
@@ -75,18 +70,16 @@ module RecordingStudioGoogleDrive
 
     private
 
-    def oauth_credentials_blank?(overrides = {})
-      client_id, client_secret = resolved_oauth_credentials(overrides)
+    def oauth_credentials_blank?
+      client_id, client_secret = resolved_oauth_credentials
       client_id.blank? && client_secret.blank?
     end
 
-    def resolved_oauth_credentials(overrides = {})
+    def resolved_oauth_credentials
       stored = stored_oauth_credentials
       [
-        strip_oauth_credential(overrides[:client_id]) ||
-          strip_oauth_credential(configuration.client_id) || stored[:client_id],
-        strip_oauth_credential(overrides[:client_secret]) ||
-          strip_oauth_credential(configuration.client_secret) || stored[:client_secret]
+        strip_oauth_credential(configuration.client_id) || stored[:client_id],
+        strip_oauth_credential(configuration.client_secret) || stored[:client_secret]
       ]
     end
 

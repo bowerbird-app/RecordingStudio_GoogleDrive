@@ -26,7 +26,7 @@ Google Drive is a root plugin. A workspace admin connects it once for the worksp
 RecordingStudioGoogleDrive.register_oauth_provider
 ```
 
-That call uses Oauth's public registry with `kind: :root`. It skips registration only when both `client_id` and `client_secret` are blank (this gem's config, keyword overrides, or `recording_studio_oauth.outbound.google_drive`), so a host without Drive credentials still boots. Other Oauth errors still raise. Authorize URL, token URL, revoke URL, Drive scopes, PKCE, and refresh are the defaults. `access_type=offline` and `prompt=consent` are sent so Google issues a refresh token.
+That call uses Oauth's public registry with `kind: :root`. It skips registration only when both `client_id` and `client_secret` are blank (this gem's config or `recording_studio_oauth.outbound.google_drive`), so a host without Drive credentials still boots. Other Oauth errors still raise. Authorize URL, token URL, revoke URL, Drive scopes, PKCE, and refresh are the defaults. `access_type=offline` and `prompt=consent` are sent so Google issues a refresh token.
 
 ## Client
 

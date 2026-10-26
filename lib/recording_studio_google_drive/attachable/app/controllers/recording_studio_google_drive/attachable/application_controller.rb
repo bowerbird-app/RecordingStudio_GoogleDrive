@@ -57,7 +57,7 @@ module RecordingStudioGoogleDrive
         {
           authenticity_token: form_authenticity_token,
           owner: "root",
-          root_recording_id: google_drive_root.id,
+          root_recording_id: google_drive_root&.id,
           return_to: connect_return_to(popup: params[:popup].to_s == "1" || embedded_upload_provider_request?)
         }
       end

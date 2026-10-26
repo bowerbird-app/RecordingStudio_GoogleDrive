@@ -7,7 +7,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 ## [0.5.0] - 2026-10-26
 
 ### Changed
-- **BREAKING.** The engine no longer registers Google Drive with Oauth. The host must call `RecordingStudioGoogleDrive.register_oauth_provider` from an initializer (same pattern as Dropbox).
+- **BREAKING.** The engine no longer registers Google Drive with Oauth. The host must call `RecordingStudioGoogleDrive.register_oauth_provider` from an initializer (same pattern as Dropbox). The bang name `register_oauth_provider!` is removed.
 - Google Drive is a root plugin (`kind: :root`). A workspace admin connects it for the workspace.
 - Dummy and CI pin Oauth `v0.17.0`. The gemspec requires `recording_studio_oauth >= 0.17.0, < 1.0`.
 
