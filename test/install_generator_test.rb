@@ -8,6 +8,11 @@ class InstallGeneratorTest < Minitest::Test
     "../lib/generators/recording_studio_google_drive/install/templates/INSTALL.md",
     __dir__
   )
+  INITIALIZER_TEMPLATE_PATH = File.expand_path(
+    "../lib/generators/recording_studio_google_drive/install/templates/" \
+    "recording_studio_google_drive_initializer.rb",
+    __dir__
+  )
 
   def build_generator(destination_root, options = {})
     RecordingStudioGoogleDrive::Generators::InstallGenerator.new(
@@ -43,13 +48,7 @@ class InstallGeneratorTest < Minitest::Test
   def test_install_guide_describes_library_setup
     install_guide = File.read(INSTALL_TEMPLATE_PATH)
 
-    initializer = File.read(
-      File.expand_path(
-        "../lib/generators/recording_studio_google_drive/install/templates/" \
-          "recording_studio_google_drive_initializer.rb",
-        __dir__
-      )
-    )
+    initializer = File.read(INITIALIZER_TEMPLATE_PATH)
     assert_includes initializer, "RecordingStudioGoogleDrive.register_oauth_provider"
 
     assert_includes install_guide, "Client.for"
