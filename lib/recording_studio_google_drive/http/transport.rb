@@ -55,6 +55,10 @@ module RecordingStudioGoogleDrive
         return finish(response, &read_body) if location.empty?
         raise RequestError, "Google Drive request refused a redirect" unless request.method == "GET"
 
+        continue_redirect(uri, location, follow_cross_host:, redirects_remaining:, &read_body)
+      end
+
+      def continue_redirect(uri, location, follow_cross_host:, redirects_remaining:, &read_body)
         redirected = URI.join(uri.to_s, location)
         refuse_cross_host_json_redirect!(uri, redirected, follow_cross_host)
         perform(
