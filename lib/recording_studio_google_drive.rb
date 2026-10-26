@@ -35,10 +35,10 @@ module RecordingStudioGoogleDrive
       configuration
     end
 
-    def register_oauth_provider!
+    def register_oauth_provider
       return if oauth_credentials_blank?
 
-      RecordingStudioOauth.register_outbound_provider(**oauth_provider_attrs)
+      RecordingStudioOauth.register_outbound_provider(**oauth_provider_attrs, kind: :root)
     end
 
     def oauth_provider_attrs

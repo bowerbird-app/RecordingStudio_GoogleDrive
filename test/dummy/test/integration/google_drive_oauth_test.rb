@@ -16,6 +16,7 @@ class GoogleDriveOauthTest < ActionDispatch::IntegrationTest
     )
     @workspace = Workspace.create!(name: "Drive Workspace #{SecureRandom.hex(4)}")
     @root_recording = RecordingStudio.root_recording_for(@workspace)
+    grant_workspace_access!(@root_recording)
     sign_in @user
   end
 
@@ -36,16 +37,14 @@ class GoogleDriveOauthTest < ActionDispatch::IntegrationTest
   test "connect disconnect and reconnect for Google Drive" do
     follow_connect!
 
-    connection = RecordingStudioOauth::OutboundConnection.find_by!(
-      provider_key: "google_drive",
-      owner_actor: @user
-    )
+    connection = workspace_drive_connection!
     assert_equal "active", connection.status
     refute_nil connection.access_token
     refute_includes connection.inspect, connection.access_token
     assert_nil session[:access_token]
     assert_nil session["refresh_token"]
 
+    switch_to_workspace_root!
     get "/"
     assert_response :success
     assert_includes response.body, "Disconnect"
@@ -75,18 +74,19 @@ class GoogleDriveOauthTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "Connect Google Drive"
 
     follow_connect!
-    live = RecordingStudioOauth::OutboundConnection.live.find_by!(owner_actor: @user)
+    live = workspace_drive_connection!
     assert_equal "active", live.status
     refute_equal connection.id, live.id
 
     live.update!(status: "needs_reconnect")
+    switch_to_workspace_root!
     get "/"
     assert_includes response.body, "Reconnect"
   end
 
   test "expired token refreshes through oauth before the client reads it" do
     follow_connect!
-    connection = RecordingStudioOauth::OutboundConnection.find_by!(owner_actor: @user)
+    connection = workspace_drive_connection!
     old_token = connection.access_token
     connection.update!(expires_at: 1.minute.ago)
 
@@ -97,7 +97,7 @@ class GoogleDriveOauthTest < ActionDispatch::IntegrationTest
 
   test "picker_access_token returns the live oauth token" do
     follow_connect!
-    connection = RecordingStudioOauth::OutboundConnection.find_by!(owner_actor: @user)
+    connection = workspace_drive_connection!
 
     token = RecordingStudioGoogleDrive.picker_access_token(root: @root_recording, actor: @user)
 
@@ -114,7 +114,7 @@ class GoogleDriveOauthTest < ActionDispatch::IntegrationTest
 
   test "picker_access_token raises reconnect required when the connection needs reconnect" do
     follow_connect!
-    connection = RecordingStudioOauth::OutboundConnection.find_by!(owner_actor: @user)
+    connection = workspace_drive_connection!
     connection.update!(status: "needs_reconnect")
 
     error = assert_raises(RecordingStudioGoogleDrive::ReconnectRequired) do
@@ -126,7 +126,7 @@ class GoogleDriveOauthTest < ActionDispatch::IntegrationTest
 
   test "refresh failure raises reconnect required" do
     follow_connect!
-    connection = RecordingStudioOauth::OutboundConnection.find_by!(owner_actor: @user)
+    connection = workspace_drive_connection!
     connection.update!(refresh_token: FakeOauth::FAIL_REFRESH, expires_at: 1.minute.ago)
 
     error = assert_raises(RecordingStudioGoogleDrive::ReconnectRequired) do
@@ -139,7 +139,8 @@ class GoogleDriveOauthTest < ActionDispatch::IntegrationTest
 
   test "google_drive provider is registered with fake local endpoints" do
     post recording_studio_oauth.outbound_connect_path(provider: "google_drive"), params: {
-      owner: "user",
+      owner: "root",
+      root_recording_id: @root_recording.id,
       return_to: "/"
     }
     assert_response :redirect
@@ -153,11 +154,55 @@ class GoogleDriveOauthTest < ActionDispatch::IntegrationTest
     assert_equal "consent", query["prompt"]
   end
 
+  test "host register_oauth_provider is idempotent and lists google drive as a root provider" do
+    listed = RecordingStudioOauth.outbound_providers.find { |entry| entry[:key].to_s == "google_drive" }
+
+    assert_equal({ key: "google_drive", kind: :root }, listed)
+
+    RecordingStudioGoogleDrive.register_oauth_provider
+    listed_again = RecordingStudioOauth.outbound_providers.select { |entry| entry[:key].to_s == "google_drive" }
+
+    assert_equal 1, listed_again.size
+    assert_equal({ key: "google_drive", kind: :root }, listed_again.first)
+  end
+
   private
+
+  def workspace_drive_connection!
+    RecordingStudioOauth::OutboundConnection.live.find_by!(
+      provider_key: "google_drive",
+      root_recording_id: @root_recording.id
+    )
+  end
+
+  def grant_workspace_access!(root, actor: @user, role: :admin)
+    original = RecordingStudioAccessible.configuration.access_management_authorizer
+    RecordingStudioAccessible.configuration.access_management_authorizer = ->(**) { true }
+    result = RecordingStudioAccessible.grant_access(
+      recording: root,
+      actor: actor,
+      role: role,
+      manager_actor: @user
+    )
+    raise result.error if result.failure?
+  ensure
+    RecordingStudioAccessible.configuration.access_management_authorizer = original
+  end
+
+  def switch_to_workspace_root!
+    patch "/recording_studio_root_switchable/v1/root_switch", params: {
+      scope: "all_workspaces",
+      root_switch: {
+        root_recording_id: @root_recording.id,
+        return_to: "/"
+      }
+    }
+  end
 
   def follow_connect!
     post recording_studio_oauth.outbound_connect_path(provider: "google_drive"), params: {
-      owner: "user",
+      owner: "root",
+      root_recording_id: @root_recording.id,
       return_to: "/"
     }
     assert_response :redirect

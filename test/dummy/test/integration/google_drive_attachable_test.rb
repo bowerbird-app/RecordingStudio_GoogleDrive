@@ -270,7 +270,8 @@ class GoogleDriveAttachableTest < ActionDispatch::IntegrationTest
     assert_response :success
     post oauth_outbound_connect_path, params: {
       authenticity_token: authenticity_token,
-      owner: "user",
+      owner: "root",
+      root_recording_id: @root.id,
       return_to: google_drive.recording_imports_path(@recording)
     }
     assert_response :redirect

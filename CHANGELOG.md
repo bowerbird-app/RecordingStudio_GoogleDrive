@@ -4,6 +4,25 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.5.0] - 2026-10-26
+
+### Changed
+- **BREAKING.** The engine no longer registers Google Drive with Oauth. The host must call `RecordingStudioGoogleDrive.register_oauth_provider` from an initializer (same pattern as Dropbox). The bang name `register_oauth_provider!` is removed.
+- Google Drive is a root plugin (`kind: :root`). A workspace admin connects it for the workspace.
+- Dummy and CI pin Oauth `v0.17.0`. The gemspec requires `recording_studio_oauth >= 0.17.0, < 1.0`.
+
+### Upgrade notes
+- Pin Oauth `v0.17.0`. Add this to `config/initializers/recording_studio_google_drive.rb` (the install generator now writes it):
+
+```ruby
+RecordingStudioGoogleDrive.register_oauth_provider
+```
+
+- Connect with `owner=root` and the workspace `root_recording_id`. Personal `owner=user` Connect is rejected for this provider.
+- Calling `register_oauth_provider` twice is safe. It still skips only when both `client_id` and `client_secret` are blank.
+
+[0.5.0]: https://github.com/bowerbird-app/RecordingStudio_GoogleDrive/releases/tag/v0.5.0
+
 ## [0.4.1] - 2026-10-26
 
 ### Changed
