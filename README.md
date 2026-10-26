@@ -4,7 +4,7 @@ This gem talks to the Google Drive API for Recording Studio. It lists and search
 
 ## Setup
 
-1. Add the gem and pin Oauth `v0.14.1`.
+1. Add the gem and pin Oauth `v0.15.1`.
 2. Run `bin/rails generate recording_studio_google_drive:install`.
 3. Install and migrate Recording Studio Oauth (`recording_studio_oauth:install` and `recording_studio_oauth:migrations`).
 4. Set Google OAuth app credentials. Name the keys. Do not put the values in git, chat, or this README.
@@ -115,13 +115,13 @@ bin/rails db:setup
 bin/dev
 ```
 
-Without Google secrets, dummy uses `/fake_oauth/*`. For a real Drive import in the browser, set Rails credentials `attachable.google_drive.*` or `google_drive.*` (`client_id`, `client_secret`, `api_key`, `app_id`), or the ENV vars `GOOGLE_DRIVE_CLIENT_ID`, `GOOGLE_DRIVE_CLIENT_SECRET`, `GOOGLE_DRIVE_API_KEY`, and `GOOGLE_DRIVE_APP_ID`. `RAILS_DEVELOPMENT_HOSTS` adds allowed hosts.
+Without Google secrets, dummy uses `/fake_oauth/*`. For a real Drive import in the browser, set `recording_studio_oauth.outbound.google_drive` (`client_id`, `client_secret`) and picker keys on `attachable.google_drive` or `google_drive` (`api_key`, `app_id`), or the ENV vars `GOOGLE_DRIVE_CLIENT_ID`, `GOOGLE_DRIVE_CLIENT_SECRET`, `GOOGLE_DRIVE_API_KEY`, and `GOOGLE_DRIVE_APP_ID`. `RAILS_DEVELOPMENT_HOSTS` adds allowed hosts.
 
 After seed, open `/recording_studio_attachable/recordings/<page-recording-id>/attachments/upload` on the seeded Getting Started page. Seeds print that path.
 
 ## Development
 
-Ruby 3.3.12. Rails 8.1. Recording Studio `~> 4.2` (dummy GitHub tag `v4.7.0`). Oauth `>= 0.14.1, < 1.0` (dummy GitHub tag `v0.14.1`). Attachable is optional (`>= 0.21.0, < 1.0`; dummy and CI pin tag `v0.21.0`).
+Ruby 3.3.12. Rails 8.1. Recording Studio `~> 4.2` (dummy GitHub tag `v4.7.0`). Oauth `>= 0.14.1, < 1.0` (dummy GitHub tag `v0.15.1`). Attachable is optional (`>= 0.21.0, < 1.0`; dummy and CI pin tag `v0.21.0`). Dummy and CI also pin API `v0.16.0`, Logs `v0.7.0`, and Metrics `v0.6.1`.
 
 ```bash
 bundle install

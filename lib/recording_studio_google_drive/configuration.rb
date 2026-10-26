@@ -52,7 +52,7 @@ module RecordingStudioGoogleDrive
       "#<#{self.class.name} page_size=#{page_size.inspect} " \
         "oauth_provider_key=#{oauth_provider_key.inspect} " \
         "authorize_url=#{authorize_url.inspect} token_url=#{token_url.inspect} " \
-        "client_id=#{client_id.inspect} client_secret=[FILTERED]>"
+        "client_id=#{filtered_credential(client_id)} client_secret=#{filtered_credential(client_secret)}>"
     end
 
     alias to_s inspect
@@ -104,6 +104,10 @@ module RecordingStudioGoogleDrive
 
     def present_credential?(value)
       value.respond_to?(:to_s) && value.to_s.strip != ""
+    end
+
+    def filtered_credential(value)
+      present_credential?(value) ? "[FILTERED]" : "nil"
     end
   end
 

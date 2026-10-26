@@ -4,7 +4,7 @@ require "test_helper"
 
 class RecordingStudioGoogleDriveTest < Minitest::Test
   def test_version_matches_release
-    assert_equal "0.4.0", ::RecordingStudioGoogleDrive::VERSION
+    assert_equal "0.4.1", ::RecordingStudioGoogleDrive::VERSION
   end
 
   def test_engine_exists
@@ -50,6 +50,7 @@ class RecordingStudioGoogleDriveTest < Minitest::Test
 
   def test_dummy_gemfile_pins_verified_4x_github_tags
     gemfile = File.read(File.expand_path("dummy/Gemfile", __dir__))
+    root_gemfile = File.read(File.expand_path("../Gemfile", __dir__))
 
     assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio", tag: "v4.7.0"'
     refute_includes gemfile, 'tag: "v4.6.0"'
@@ -60,19 +61,23 @@ class RecordingStudioGoogleDriveTest < Minitest::Test
     refute_includes gemfile, 'tag: "v0.17.0"'
     refute_includes gemfile, 'github: "bowerbird-app/RecordingStudio_accessible", tag: "v0.15.0"'
     refute_includes gemfile, 'tag: "v0.10.1"'
-    assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_Oauth", tag: "v0.14.1"'
+    assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_Oauth", tag: "v0.15.1"'
     assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_admin", tag: "v2.2.0"'
     assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_root_switchable", tag: "v0.9.0"'
     assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_cache", tag: "v0.5.0"'
-    assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_metrics", tag: "v0.5.0"'
+    assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_metrics", tag: "v0.6.1"'
     assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_attachable",'
     assert_includes gemfile, 'tag: "v0.21.0"'
-    assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_logs", tag: "v0.4.1"'
+    assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_logs", tag: "v0.7.0"'
     assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_site_settings", tag: "v0.2.0"'
-    assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_api", tag: "v0.14.0"'
+    assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_api", tag: "v0.16.0"'
     refute_includes gemfile, 'tag: "v0.6.0"'
     refute_includes gemfile, 'tag: "v0.5.1"'
     assert_includes gemfile, 'github: "bowerbird-app/flatpack", tag: "v0.1.213"'
+    assert_includes root_gemfile, 'github: "bowerbird-app/RecordingStudio_Oauth", tag: "v0.15.1"'
+    assert_includes root_gemfile, 'github: "bowerbird-app/RecordingStudio_api", tag: "v0.16.0"'
+    assert_includes root_gemfile, 'github: "bowerbird-app/RecordingStudio_logs", tag: "v0.7.0"'
+    assert_includes root_gemfile, 'github: "bowerbird-app/RecordingStudio_metrics", tag: "v0.6.1"'
     refute_includes gemfile, "recording_studio/v3.0.0"
     refute_includes gemfile, 'tag: "v4.4.0"'
     refute_includes gemfile, 'tag: "v4.3.0"'
@@ -138,6 +143,13 @@ class RecordingStudioGoogleDriveTest < Minitest::Test
     refute File.exist?(File.expand_path("../lib/recording_studio_google_drive/hooks.rb", __dir__))
     refute File.exist?(File.expand_path("../lib/recording_studio_google_drive/services/base_service.rb", __dir__))
     refute File.exist?(File.expand_path("../lib/recording_studio_google_drive/services/example_service.rb", __dir__))
+    refute File.exist?(
+      File.expand_path("../lib/generators/recording_studio_google_drive/migrations/migrations_generator.rb", __dir__)
+    )
+    refute File.exist?(File.expand_path("../lib/recording_studio_google_drive/http/limited_get.rb", __dir__))
+    refute File.exist?(File.expand_path("dummy/app/javascript/controllers/hello_controller.js", __dir__))
+    refute File.exist?(File.expand_path("dummy/.github/workflows/ci.yml", __dir__))
+    refute File.exist?(File.expand_path("dummy/app/views/makeup_artist/custom_examples/.keep", __dir__))
   end
 
   def test_gem_does_not_ship_the_template_example_capability
@@ -310,5 +322,30 @@ class RecordingStudioGoogleDriveTest < Minitest::Test
 
     assert_includes initializer, 'config.app_name = "Google Drive Demo"'
     refute_includes initializer, "Addon Template"
+  end
+
+  def test_dummy_reads_oauth_credentials_from_oauth_outbound
+    initializer = File.read(
+      File.expand_path("dummy/config/initializers/recording_studio_google_drive.rb", __dir__)
+    )
+
+    assert_includes initializer, "recording_studio_oauth"
+    assert_includes initializer, ":outbound"
+    assert_includes initializer, ":google_drive"
+    refute_includes initializer, "nested[:client_id]"
+    refute_includes initializer, "nested[:client_secret]"
+  end
+
+  def test_dummy_oauth_keeps_api_mount_without_mcp
+    initializer = File.read(File.expand_path("dummy/config/initializers/recording_studio_oauth.rb", __dir__))
+
+    assert_includes initializer, "config.api_mount_path = \"/recording_studio_api\""
+    refute_includes initializer, "mcp_mount_path"
+  end
+
+  def test_rubocop_does_not_exclude_template_services
+    rubocop = File.read(File.expand_path("../.rubocop.yml", __dir__))
+
+    refute_includes rubocop, "test/services"
   end
 end

@@ -45,8 +45,3 @@ Lint/NestedMethodDefinition:
 Naming/VariableNumber:
   Exclude:
     - 'test/**/*'
-
-# Don't require super in service initialize methods
-Lint/MissingSuper:
-  Exclude:
-    - 'test/services/**/*'

@@ -103,11 +103,7 @@ module RecordingStudioGoogleDrive
       end
 
       def reject_oversized!(metadata)
-        max_bytes = max_file_size
-        return if max_bytes.blank? || metadata.size.nil?
-        return unless metadata.size > max_bytes
-
-        raise ArgumentError, "Remote file exceeds maximum file size"
+        Http::ByteCap.reject_size!(metadata.size, max_file_size)
       end
     end
 
