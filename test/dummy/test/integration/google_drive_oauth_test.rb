@@ -44,6 +44,7 @@ class GoogleDriveOauthTest < ActionDispatch::IntegrationTest
     assert_nil session[:access_token]
     assert_nil session["refresh_token"]
 
+    switch_to_workspace_root!
     get "/"
     assert_response :success
     assert_includes response.body, "Disconnect"
@@ -78,6 +79,7 @@ class GoogleDriveOauthTest < ActionDispatch::IntegrationTest
     refute_equal connection.id, live.id
 
     live.update!(status: "needs_reconnect")
+    switch_to_workspace_root!
     get "/"
     assert_includes response.body, "Reconnect"
   end
@@ -185,6 +187,16 @@ class GoogleDriveOauthTest < ActionDispatch::IntegrationTest
     raise result.error if result.failure?
   ensure
     RecordingStudioAccessible.configuration.access_management_authorizer = original
+  end
+
+  def switch_to_workspace_root!
+    patch "/recording_studio_root_switchable/v1/root_switch", params: {
+      scope: "all_workspaces",
+      root_switch: {
+        root_recording_id: @root_recording.id,
+        return_to: "/"
+      }
+    }
   end
 
   def follow_connect!

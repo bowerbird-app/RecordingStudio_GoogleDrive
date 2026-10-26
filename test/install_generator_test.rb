@@ -45,7 +45,8 @@ class InstallGeneratorTest < Minitest::Test
 
     initializer = File.read(
       File.expand_path(
-        "../lib/generators/recording_studio_google_drive/install/templates/recording_studio_google_drive_initializer.rb",
+        "../lib/generators/recording_studio_google_drive/install/templates/" \
+          "recording_studio_google_drive_initializer.rb",
         __dir__
       )
     )
