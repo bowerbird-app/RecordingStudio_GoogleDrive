@@ -10,7 +10,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - Dummy and CI pin Oauth `v0.15.1`, API `v0.16.0`, Logs `v0.7.0`, and Metrics `v0.6.1`. The gemspec still requires `recording_studio_oauth >= 0.14.1, < 1.0`.
 - Dummy Google OAuth `client_id` and `client_secret` come from `recording_studio_oauth.outbound.google_drive` (or `GOOGLE_DRIVE_CLIENT_ID` / `GOOGLE_DRIVE_CLIENT_SECRET`). Picker `api_key` and `app_id` stay on `attachable.google_drive` / `google_drive`.
 - `Configuration#inspect` and `#to_s` redact `client_id` the same way they redact `client_secret`.
-- Drive download oversize checks share `Http::ByteCap.reject_size!`. HTTPS GET, POST, and capped downloads share one Transport request loop.
+- Drive download oversize checks share `Http::ByteCap.reject_size!`. HTTPS GET, POST, and capped `get_bytes` share one Transport request loop.
 
 ### Removed
 - Template leftover `migrations` generator.
@@ -19,7 +19,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - Dummy Oauth `mcp_mount_path`. API mount stays because dummy mounts Recording Studio API there.
 
 ### Upgrade notes
-- Pin Oauth `v0.15.1` (not unreleased `0.16.0`). Pin API `v0.16.0`, Logs `v0.7.0`, and Metrics `v0.6.1` in the host if those gems are present. No Google Drive migration. Hosts that already installed Logs `0.4.x` runs tables should run the Logs `period_start` upgrade. Hosts that installed API request-log summary tables should drop those unused tables.
+- Pin Oauth `v0.15.1` (not unreleased `0.16.0`). Pin API `v0.16.0`, Logs `v0.7.0`, and Metrics `v0.6.1` in the host if those gems are present. There is no Google Drive migration. Dummy-only copies of the Logs and API install generators (`rename_aggregation_run_day_to_period_start` and `drop_api_request_log_summaries`) keep the dummy host schema in line with those pins.
 - Keep Oauth `client_id` and `client_secret` on `recording_studio_oauth.outbound.google_drive`. Do not read them from `attachable.google_drive`.
 
 [0.4.1]: https://github.com/bowerbird-app/RecordingStudio_GoogleDrive/releases/tag/v0.4.1
