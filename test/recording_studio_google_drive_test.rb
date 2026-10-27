@@ -4,7 +4,7 @@ require "test_helper"
 
 class RecordingStudioGoogleDriveTest < Minitest::Test
   def test_version_matches_release
-    assert_equal "0.5.0", ::RecordingStudioGoogleDrive::VERSION
+    assert_equal "0.5.1", ::RecordingStudioGoogleDrive::VERSION
   end
 
   def test_engine_exists
@@ -16,7 +16,7 @@ class RecordingStudioGoogleDriveTest < Minitest::Test
 
     gemfile = File.read(File.expand_path("../Gemfile", __dir__))
 
-    assert_includes gemspec, 'spec.add_dependency "recording_studio", "~> 4.2"'
+    assert_includes gemspec, 'spec.add_dependency "recording_studio", ">= 4.2", "< 7"'
     assert_includes gemspec, 'spec.add_dependency "recording_studio_oauth", ">= 0.17.0", "< 1.0"'
     refute_includes gemspec, "recording_studio_attachable"
     assert_includes gemfile, "recording_studio_attachable"
