@@ -7,10 +7,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 ## [0.5.1] - 2026-10-27
 
 ### Changed
-- The gemspec requires `recording_studio >= 4.2, < 7` so this gem can install beside Recording Studio 6.x. Dummy and CI still pin `v4.7.0`.
+- The gemspec requires `recording_studio >= 4.2, < 7` so this gem can install beside Recording Studio 6.x.
+- Dummy and development Gemfiles pin Recording Studio `v6.3.0`, Flatpack `v0.1.327`, Oauth `v0.20.0`, Attachable `v0.22.0`, Root Switchable `v0.11.0`, Cache `v0.6.0`, and Metrics `v0.7.0`.
 
 ### Upgrade notes
-- Hosts on Recording Studio 6.x can add this gem without a `~> 4.2` conflict. Dummy still uses tag `v4.7.0`.
+- Hosts on Recording Studio 6.x can add this gem without a `~> 4.2` conflict. Dummy uses tag `v6.3.0`.
 
 [0.5.1]: https://github.com/bowerbird-app/RecordingStudio_GoogleDrive/releases/tag/v0.5.1
 

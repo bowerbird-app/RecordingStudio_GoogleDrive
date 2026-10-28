@@ -7,17 +7,17 @@
     variant: :h1
   ) %>
 
-  <%= render FlatPack::Card::Component.new(style: :default) do |card| %>
+  <%= render FlatPack::Card::Component.new(background: :shaded) do |card| %>
     <% card.header do %>
-      <%= render FlatPack::PageTitle::Component.new(
+      <%= render FlatPack::SectionTitle::Component.new(
         title: drive_status_title,
         subtitle: drive_status_subtitle,
-        variant: :h3,
-        class: "mb-0 pb-0"
+        size: :md,
+        spacing: :none
       ) %>
     <% end %>
     <% card.footer do %>
-      <div class="flex flex-wrap gap-3">
+      <%= render FlatPack::Collection::Component.new(layout: :wrap, gap: :md) do %>
         <% if @drive_connection.nil? %>
           <%= form_with url: recording_studio_oauth.outbound_connect_path(provider: drive_provider_key), method: :post do %>
             <%= hidden_field_tag :owner, "root" %>
@@ -47,7 +47,7 @@
             url: recording_studio_attachable.recording_attachment_upload_path(@upload_recording)
           ) %>
         <% end %>
-      </div>
+      <% end %>
     <% end %>
   <% end %>
 </div>

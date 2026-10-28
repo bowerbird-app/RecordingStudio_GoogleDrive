@@ -4,7 +4,7 @@ This gem talks to the Google Drive API for Recording Studio. It lists and search
 
 ## Setup
 
-1. Add the gem and pin Oauth `v0.17.0`.
+1. Add the gem and pin Oauth `v0.20.0`.
 2. Run `bin/rails generate recording_studio_google_drive:install`.
 3. Install and migrate Recording Studio Oauth (`recording_studio_oauth:install` and `recording_studio_oauth:migrations`).
 4. Register Google Drive from the host initializer. The gem does not register itself.
@@ -91,7 +91,7 @@ Default page size is 25. Dummy and tests point authorize, token, and revoke URLs
 
 This gem owns Google Drive import for Recording Studio Attachable. Attachable stays provider-neutral. This gem does not depend on Attachable. The add-on loads only when `RecordingStudioAttachable` `>= 0.21.0` is present (`ActiveSupport.on_load(:recording_studio_attachable)`). Dummy and CI pin Attachable in the Gemfile.
 
-1. Optionally add `recording_studio_attachable` `>= 0.21.0, < 1.0`. Dummy and CI pin Attachable to tag `v0.21.0`.
+1. Optionally add `recording_studio_attachable` `>= 0.21.0, < 1.0`. Dummy and CI pin Attachable to tag `v0.22.0`.
 2. Enable Attachable on the recordable types that should accept files.
 3. Mount Attachable. This gem registers adapter routes at `/google_drive` (`as: :google_drive`), so host URLs and route helpers stay the same as Attachable's old in-tree Drive.
 4. Pin importmap modules `recording_studio_attachable/provider_launchers` and `recording_studio_google_drive/google_drive_picker_launcher`.
@@ -129,7 +129,7 @@ After seed, open `/recording_studio_attachable/recordings/<page-recording-id>/at
 
 ## Development
 
-Ruby 3.3.12. Rails 8.1. Recording Studio `~> 4.2` (dummy GitHub tag `v4.7.0`). Oauth `>= 0.17.0, < 1.0` (dummy GitHub tag `v0.17.0`). Attachable is optional (`>= 0.21.0, < 1.0`; dummy and CI pin tag `v0.21.0`). Dummy and CI also pin API `v0.16.0`, Logs `v0.7.0`, and Metrics `v0.6.1`.
+Ruby 3.3.12. Rails 8.1. The gemspec requires Recording Studio `>= 4.2, < 7` (dummy GitHub tag `v6.3.0`). Oauth `>= 0.17.0, < 1.0` (dummy GitHub tag `v0.20.0`). Attachable is optional (`>= 0.21.0, < 1.0`; dummy and CI pin tag `v0.22.0`). Dummy and CI also pin Flatpack `v0.1.327`, API `v0.17.1`, Logs `v0.7.1`, Metrics `v0.7.0`, Cache `v0.6.0`, and Root Switchable `v0.11.0`.
 
 ```bash
 bundle install
