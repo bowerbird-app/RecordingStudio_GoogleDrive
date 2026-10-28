@@ -33,8 +33,8 @@ module ApplicationHelper
           text: "Sign out",
           style: :ghost,
           size: :md,
-          url: main_app.destroy_user_session_path,
-          data: { turbo_method: :delete }
+          href: main_app.destroy_user_session_path,
+          method: :delete
         )
       )
     end

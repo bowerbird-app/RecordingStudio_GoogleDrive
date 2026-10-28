@@ -176,17 +176,20 @@ class GoogleDriveOauthTest < ActionDispatch::IntegrationTest
   end
 
   def grant_workspace_access!(root, actor: @user, role: :admin)
-    original = RecordingStudioAccessible.configuration.access_management_authorizer
-    RecordingStudioAccessible.configuration.access_management_authorizer = ->(**) { true }
-    result = RecordingStudioAccessible.grant_access(
+    result = RecordingStudioAccessible.bootstrap_owner_access!(
+      recording: root,
+      actor: actor
+    )
+    raise result.error if result.failure?
+    return if role.to_s == "admin"
+
+    grant = RecordingStudioAccessible.grant_access(
       recording: root,
       actor: actor,
       role: role,
-      manager_actor: @user
+      manager_actor: actor
     )
-    raise result.error if result.failure?
-  ensure
-    RecordingStudioAccessible.configuration.access_management_authorizer = original
+    raise grant.error if grant.failure?
   end
 
   def switch_to_workspace_root!
