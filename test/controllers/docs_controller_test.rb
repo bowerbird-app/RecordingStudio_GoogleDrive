@@ -27,7 +27,7 @@ class DocsControllerTest < ActionDispatch::IntegrationTest
     assert_select "h1", text: "Install"
     assert_includes response.body, "Add the gems"
     assert_includes response.body, "recording_studio_oauth"
-    assert_includes response.body, "v0.17.0"
+    assert_includes response.body, "v0.20.0"
   end
 
   test "config page renders successfully" do
