@@ -85,6 +85,23 @@ class ConfigurationTest < Minitest::Test
     assert_includes @configuration.attachable.inspect, "app_id=[FILTERED]"
   end
 
+  def test_blank_and_whitespace_credentials_are_omitted_from_oauth_provider_attrs
+    @configuration.client_id = "   "
+    @configuration.client_secret = ""
+
+    attrs = @configuration.oauth_provider_attrs
+
+    refute attrs.key?(:client_id)
+    refute attrs.key?(:client_secret)
+  end
+
+  def test_whitespace_picker_credentials_are_not_configured
+    @configuration.attachable.api_key = " "
+    @configuration.attachable.app_id = "app"
+
+    refute_predicate @configuration.attachable, :picker_configured?
+  end
+
   def test_inspect_and_to_s_redact_client_id_and_client_secret
     client_id = "dummy-fake-drive-client"
     secret = "dummy-fake-drive-secret"
