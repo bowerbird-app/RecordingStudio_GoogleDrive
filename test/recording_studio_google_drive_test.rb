@@ -4,7 +4,7 @@ require "test_helper"
 
 class RecordingStudioGoogleDriveTest < Minitest::Test
   def test_version_matches_release
-    assert_equal "0.5.1", ::RecordingStudioGoogleDrive::VERSION
+    assert_equal "0.5.2", ::RecordingStudioGoogleDrive::VERSION
   end
 
   def test_engine_exists

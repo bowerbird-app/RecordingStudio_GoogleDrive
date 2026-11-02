@@ -1,7 +1,18 @@
 # frozen_string_literal: true
 
 module RecordingStudioGoogleDrive
+  module PresentCredential
+    private
+
+    def present_credential?(value)
+      value.respond_to?(:to_s) && value.to_s.strip != ""
+    end
+  end
+  private_constant :PresentCredential
+
   class Configuration
+    include PresentCredential
+
     DEFAULT_PAGE_SIZE = 25
     DEFAULT_OAUTH_PROVIDER_KEY = :google_drive
     DEFAULT_AUTHORIZE_URL = "https://accounts.google.com/o/oauth2/v2/auth"
@@ -102,16 +113,14 @@ module RecordingStudioGoogleDrive
       attrs
     end
 
-    def present_credential?(value)
-      value.respond_to?(:to_s) && value.to_s.strip != ""
-    end
-
     def filtered_credential(value)
       present_credential?(value) ? "[FILTERED]" : "nil"
     end
   end
 
   class AttachableConfiguration
+    include PresentCredential
+
     DEFAULT_SCOPES = ["https://www.googleapis.com/auth/drive.readonly"].freeze
 
     attr_accessor :enabled, :api_key, :app_id, :page_size
@@ -149,11 +158,5 @@ module RecordingStudioGoogleDrive
     end
 
     alias to_s inspect
-
-    private
-
-    def present_credential?(value)
-      value.respond_to?(:to_s) && value.to_s.strip != ""
-    end
   end
 end
