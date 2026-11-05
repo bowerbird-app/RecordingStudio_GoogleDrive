@@ -4,6 +4,20 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.0] - 2026-11-05
+
+### Changed
+- The gemspec requires `recording_studio >= 6.1, < 7`. Dummy and development Gemfiles still pin Recording Studio `v6.3.0`.
+- Dummy and development Gemfiles pin Flatpack `v0.1.341`, Accessible `v0.24.1`, Trashable `v0.12.2`, Cache `v0.6.2`, Logs `v0.7.3`, Metrics `v0.7.2`, and Root Switchable `v0.11.5`. Oauth stays `v0.20.0`. API stays `v0.17.1`.
+- Dummy and development lockfiles use Rails 8.1.4.1, loofah 2.25.3 or later, nokogiri 1.19.5 or later, and rails-html-sanitizer 1.7.2 or later.
+
+### Upgrade notes
+- Hosts must be on Recording Studio 6.1 or later. Dummy uses tag `v6.3.0`.
+- Attachable import is the first-class read-only path: set `config.scopes` to `RecordingStudioGoogleDrive::AttachableConfiguration::DEFAULT_SCOPES` (`drive.readonly`). The client default stays `drive` for `upload_file`.
+- Rebundle if your lockfile still pins Rails 8.1.4 or older sanitizer gems.
+
+[0.6.0]: https://github.com/bowerbird-app/RecordingStudio_GoogleDrive/releases/tag/v0.6.0
+
 ## [0.5.2] - 2026-11-02
 
 ### Changed
