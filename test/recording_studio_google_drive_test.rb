@@ -4,19 +4,20 @@ require "test_helper"
 
 class RecordingStudioGoogleDriveTest < Minitest::Test
   def test_version_matches_release
-    assert_equal "0.5.2", ::RecordingStudioGoogleDrive::VERSION
+    assert_equal "0.6.0", ::RecordingStudioGoogleDrive::VERSION
   end
 
   def test_engine_exists
     assert_kind_of Class, ::RecordingStudioGoogleDrive::Engine
   end
 
-  def test_gemspec_pins_recording_studio_4_2
+  def test_gemspec_pins_recording_studio_6_1
     gemspec = File.read(File.expand_path("../recording_studio_google_drive.gemspec", __dir__))
 
     gemfile = File.read(File.expand_path("../Gemfile", __dir__))
 
-    assert_includes gemspec, 'spec.add_dependency "recording_studio", ">= 4.2", "< 7"'
+    assert_includes gemspec, 'spec.add_dependency "recording_studio", ">= 6.1", "< 7"'
+    refute_includes gemspec, '">= 4.2"'
     assert_includes gemspec, 'spec.add_dependency "recording_studio_oauth", ">= 0.17.0", "< 1.0"'
     refute_includes gemspec, "recording_studio_attachable"
     assert_includes gemfile, "recording_studio_attachable"
@@ -56,32 +57,34 @@ class RecordingStudioGoogleDriveTest < Minitest::Test
     refute_includes gemfile, 'tag: "v4.7.0"'
     refute_includes gemfile, 'tag: "v4.6.0"'
     refute_includes gemfile, 'tag: "v4.5.0"'
-    assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_accessible", tag: "v0.23.0"'
-    assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_trashable", tag: "v0.12.0", require: false'
+    assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_accessible", tag: "v0.24.1"'
+    assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_trashable", tag: "v0.12.2", require: false'
     refute_includes gemfile, 'github: "bowerbird-app/RecordingStudio_accessible", tag: "v0.18.0"'
     refute_includes gemfile, 'github: "bowerbird-app/RecordingStudio_accessible", tag: "v0.17.0"'
     refute_includes gemfile, 'github: "bowerbird-app/RecordingStudio_accessible", tag: "v0.15.0"'
     assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_Oauth", tag: "v0.20.0"'
     assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_admin", tag: "v2.7.1"'
-    assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_root_switchable", tag: "v0.11.0"'
-    assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_cache", tag: "v0.6.0"'
-    assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_metrics", tag: "v0.7.0"'
+    assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_root_switchable", tag: "v0.11.5"'
+    assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_cache", tag: "v0.6.2"'
+    assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_metrics", tag: "v0.7.2"'
     assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_attachable",'
     assert_includes gemfile, 'tag: "v0.22.0"'
-    assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_logs", tag: "v0.7.1"'
+    assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_logs", tag: "v0.7.3"'
     assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_site_settings", tag: "v0.5.2"'
     assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_api", tag: "v0.17.1"'
     assert_includes gemfile, 'gem "net-ssh", ">= 7.3.8"'
     refute_includes gemfile, 'github: "bowerbird-app/RecordingStudio_cache", tag: "v0.5.0"'
     refute_includes gemfile, 'github: "bowerbird-app/RecordingStudio_metrics", tag: "v0.6.1"'
-    assert_includes gemfile, 'github: "bowerbird-app/flatpack", tag: "v0.1.327"'
+    assert_includes gemfile, 'github: "bowerbird-app/flatpack", tag: "v0.1.341"'
     assert_includes root_gemfile, 'github: "bowerbird-app/RecordingStudio", tag: "v6.3.0"'
-    assert_includes root_gemfile, 'github: "bowerbird-app/flatpack", tag: "v0.1.327"'
+    assert_includes root_gemfile, 'github: "bowerbird-app/flatpack", tag: "v0.1.341"'
     assert_includes root_gemfile, 'github: "bowerbird-app/RecordingStudio_Oauth", tag: "v0.20.0"'
     assert_includes root_gemfile, 'github: "bowerbird-app/RecordingStudio_api", tag: "v0.17.1"'
-    assert_includes root_gemfile, 'github: "bowerbird-app/RecordingStudio_logs", tag: "v0.7.1"'
-    assert_includes root_gemfile, 'github: "bowerbird-app/RecordingStudio_metrics", tag: "v0.7.0"'
-    assert_includes root_gemfile, 'github: "bowerbird-app/RecordingStudio_cache", tag: "v0.6.0"'
+    assert_includes root_gemfile, 'github: "bowerbird-app/RecordingStudio_logs", tag: "v0.7.3"'
+    assert_includes root_gemfile, 'github: "bowerbird-app/RecordingStudio_metrics", tag: "v0.7.2"'
+    assert_includes root_gemfile, 'github: "bowerbird-app/RecordingStudio_cache", tag: "v0.6.2"'
+    assert_includes root_gemfile, 'github: "bowerbird-app/RecordingStudio_accessible", tag: "v0.24.1"'
+    assert_includes root_gemfile, 'github: "bowerbird-app/RecordingStudio_trashable", tag: "v0.12.2"'
     refute_includes gemfile, "recording_studio/v3.0.0"
     refute_includes gemfile, 'tag: "v4.4.0"'
     refute_includes gemfile, 'tag: "v4.3.0"'
@@ -170,6 +173,44 @@ class RecordingStudioGoogleDriveTest < Minitest::Test
     refute_includes controller_source, "flat_pack_sidebar"
     refute File.exist?(File.expand_path("dummy/app/views/layouts/flat_pack_sidebar.html.erb", __dir__))
     refute File.exist?(File.expand_path("dummy/app/views/layouts/flat_pack/_sidebar.html.erb", __dir__))
+  end
+
+  def test_attachable_controllers_use_provider_controller_and_filter_standard_error
+    attachable_controllers = File.expand_path(
+      "../lib/recording_studio_google_drive/attachable/app/controllers/" \
+      "recording_studio_google_drive/attachable",
+      __dir__
+    )
+    application_controller = File.read(File.join(attachable_controllers, "application_controller.rb"))
+    bootstrap = File.read(File.join(attachable_controllers, "bootstrap_controller.rb"))
+    imports = File.read(File.join(attachable_controllers, "imports_controller.rb"))
+    errors = File.read(File.join(attachable_controllers, "imports_errors.rb"))
+
+    assert_includes application_controller, "RecordingStudioAttachable::ProviderController"
+    refute_includes application_controller, "UsesDefaultLayout"
+    refute_includes application_controller, "layout "
+    assert_includes bootstrap, "rescue StandardError => e"
+    assert_includes bootstrap, "Attachable.reconnect_error?(e)"
+    assert_includes imports, "rescue StandardError => e"
+    assert_includes imports, "handle_index_drive_error(e)"
+    assert_includes imports, "handle_create_drive_error(e)"
+    assert_includes errors, "raise unless Integration.request_error?(error)"
+    assert_includes errors, "Attachable.reconnect_error?(error)"
+  end
+
+  def test_lockfiles_use_patched_rails_and_sanitizers
+    [File.expand_path("../Gemfile.lock", __dir__), File.expand_path("dummy/Gemfile.lock", __dir__)].each do |lock|
+      specs = lockfile_spec_versions(lock)
+
+      assert_operator Gem::Version.new(specs.fetch("rails")), :>=, Gem::Version.new("8.1.4.1")
+      assert_operator Gem::Version.new(specs.fetch("loofah")), :>=, Gem::Version.new("2.25.3")
+      assert_operator Gem::Version.new(specs.fetch("nokogiri")), :>=, Gem::Version.new("1.19.5")
+      assert_operator Gem::Version.new(specs.fetch("rails-html-sanitizer")), :>=, Gem::Version.new("1.7.2")
+      assert_operator Gem::Version.new(specs.fetch("rack")), :>=, Gem::Version.new("3.2.8")
+    end
+
+    root_specs = lockfile_spec_versions(File.expand_path("../Gemfile.lock", __dir__))
+    assert_operator Gem::Version.new(root_specs.fetch("addressable")), :>=, Gem::Version.new("2.8.7")
   end
 
   def test_dummy_login_layout_keeps_flatpack_assets_without_tight_main_offset
@@ -262,6 +303,8 @@ class RecordingStudioGoogleDriveTest < Minitest::Test
     assert_includes readme, "register_upload_provider"
     assert_includes readme, "ProviderController"
     assert_includes readme, "ImportRemoteFiles"
+    assert_includes readme, "The first-class Attachable path is read-only Drive"
+    assert_includes readme, "drive.readonly"
     assert_includes readme, "ProviderConnect.payload"
     assert_includes readme, "recording_studio_attachable/provider_launchers"
     assert_includes readme, "/recording_studio_attachable/recordings/"
@@ -354,5 +397,15 @@ class RecordingStudioGoogleDriveTest < Minitest::Test
     rubocop = File.read(File.expand_path("../.rubocop.yml", __dir__))
 
     refute_includes rubocop, "test/services"
+  end
+
+  private
+
+  def lockfile_spec_versions(path)
+    versions = {}
+    File.read(path).scan(/^    ([a-z0-9_-]+) \(([^)]+)\)/) do |name, version|
+      versions[name] ||= version.split.first
+    end
+    versions
   end
 end

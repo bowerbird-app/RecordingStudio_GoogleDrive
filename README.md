@@ -109,7 +109,7 @@ Oauth `client_id` and `client_secret` stay on `recording_studio_oauth.outbound.g
 
 The add-on registers `:google_drive` with `register_upload_provider` (`connect:`, `reconnect_error:`). `connect` takes `recording:` and `context:`. `remote_importer` takes `parent_recording:`, `attachments:`, `actor:`, `impersonator:`, and `context:`. Auth is `needs_auth` on bootstrap. Connect is `{ url, method, fields, fallback_url }` — use `connect.fields.authenticity_token`, not a flat token. HTML browse uses Attachable's `_remote_file_browser` locals (`content_type`, `kind: :file` / `:folder`, `open_url`, `current_path`, `parent_url`, `path`). Controllers inherit `RecordingStudioAttachable::ProviderController`. Imports go through `RecordingStudioAttachable::Services::ImportRemoteFiles`. Drive bytes come from `Client#download`. URL downloads in Attachable go through `SafeRemoteFetch.call(..., max_bytes: configuration.max_file_size)`. Connect JSON uses `ProviderConnect.payload`. Drive-only copy such as `picker_requires_config` lives in this gem's locale file. Adapter routes register once for `:google_drive`.
 
-Import-only hosts can set `config.scopes` to `RecordingStudioGoogleDrive::AttachableConfiguration::DEFAULT_SCOPES` (`https://www.googleapis.com/auth/drive.readonly`).
+The first-class Attachable path is read-only Drive. Set `config.scopes` to `RecordingStudioGoogleDrive::AttachableConfiguration::DEFAULT_SCOPES` (`https://www.googleapis.com/auth/drive.readonly`) so Connect only lists and downloads. The client default stays `drive` so `upload_file` still has write access when a host needs it.
 
 ## Dummy app
 
@@ -129,7 +129,7 @@ After seed, open `/recording_studio_attachable/recordings/<page-recording-id>/at
 
 ## Development
 
-Ruby 3.3.12. Rails 8.1. The gemspec requires Recording Studio `>= 4.2, < 7` (dummy GitHub tag `v6.3.0`). Oauth `>= 0.17.0, < 1.0` (dummy GitHub tag `v0.20.0`). Attachable is optional (`>= 0.21.0, < 1.0`; dummy and CI pin tag `v0.22.0`). Dummy and CI also pin Flatpack `v0.1.327`, API `v0.17.1`, Logs `v0.7.1`, Metrics `v0.7.0`, Cache `v0.6.0`, and Root Switchable `v0.11.0`.
+Ruby 3.3.12. Rails 8.1. The gemspec requires Recording Studio `>= 6.1, < 7` (dummy GitHub tag `v6.3.0`). Oauth `>= 0.17.0, < 1.0` (dummy GitHub tag `v0.20.0`). Attachable is optional (`>= 0.21.0, < 1.0`; dummy and CI pin tag `v0.22.0`). Dummy and CI also pin Flatpack `v0.1.341`, Accessible `v0.24.1`, API `v0.17.1`, Logs `v0.7.3`, Metrics `v0.7.2`, Cache `v0.6.2`, Trashable `v0.12.2`, and Root Switchable `v0.11.5`.
 
 ```bash
 bundle install
