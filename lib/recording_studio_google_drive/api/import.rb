@@ -28,22 +28,17 @@ module RecordingStudioGoogleDrive
         Attachable::RemoteImport.call(
           parent_recording: recording,
           attachments: context.params[:attachments],
-          actor: Access.actor_for(context)
+          actor: Access.actor_for(context),
+          impersonator: impersonator
         )
       end
 
-      def finish(result)
-        return Serialize.import(result.value) if result.success?
-
-        finish_failure!(result)
+      def impersonator
+        context.authorized_by if context.respond_to?(:authorized_by)
       end
 
-      def finish_failure!(result)
-        message = result.error.to_s
-        raise RecordingStudioApi::AuthorizationError, message if message.start_with?("Not authorized")
-
-        details = result.respond_to?(:errors) ? Array(result.errors) : []
-        raise RecordingStudioApi::InvalidActionInputError.new(message, details: details)
+      def finish(result)
+        Serialize.import(RecordingStudioAttachable::Api::AttachmentActions::Errors.finish!(result))
       end
     end
   end

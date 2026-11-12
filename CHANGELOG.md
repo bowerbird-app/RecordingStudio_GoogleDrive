@@ -7,8 +7,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 ## [0.7.0] - 2026-11-12
 
 ### Added
-- API and MCP operations `google_drive.list`, `google_drive.search`, and `google_drive.import`. Each is a thin wrapper over `Client#list`, `Client#search`, and `Attachable::RemoteImport.call`. The gem registers them with Recording Studio API when that gem and Attachable are loaded. MCP advertises the same names. OpenAPI titles are `Google Drive - List`, `Google Drive - Search`, and `Google Drive - Import`.
-- Import authorizes with Accessible through Attachable's existing upload permission on the target recording. List and search use that same upload check.
+- API and MCP operations `google_drive.import`, `google_drive.list`, and `google_drive.search`. Each is a thin wrapper over `Attachable::RemoteImport.call`, `Client#list`, and `Client#search`. The gem registers them with Recording Studio API when that gem and Attachable are loaded. MCP advertises the same names. OpenAPI titles are `Google Drive - Import`, `Google Drive - List`, and `Google Drive - Search`.
+- Import authorizes with Accessible through Attachable's existing upload permission on the target recording. List and search use that same upload check. List and search pages are `{ entries, next_cursor }`. Import returns `{ attachments: [{ id, name, kind }] }`. `ReconnectRequired` becomes Recording Studio API's 401 authentication error.
 
 ### Upgrade notes
 - Hosts that already mount Recording Studio API and Attachable get the three operations on the public API. No new gemspec dependency. Picker tokens, connect, disconnect, fetch, download, and upload stay off the API.

@@ -49,7 +49,7 @@ class GoogleDriveApiTest < ActionDispatch::IntegrationTest
       assert_response :success, response.body
       assert_equal "file-1", payload.fetch("entries").first.fetch("id")
       assert_equal "cursor-2", payload.fetch("next_cursor")
-      assert_equal true, payload.fetch("more")
+      refute payload.key?("more")
       assert_equal "folder-1", listed.fetch(:parent_id)
 
       call(:get, "/google_drive/list", @viewer_token, recording_id: @page.id)
@@ -71,6 +71,7 @@ class GoogleDriveApiTest < ActionDispatch::IntegrationTest
       payload = call(:get, "/google_drive/search", @editor_token, recording_id: @page.id, query: "brief")
       assert_response :success, response.body
       assert_equal "Brief.pdf", payload.fetch("entries").first.fetch("name")
+      refute payload.key?("more")
       assert_equal "brief", searched.fetch(:query)
 
       call(:get, "/google_drive/search", @viewer_token, recording_id: @page.id, query: "brief")
@@ -89,11 +90,14 @@ class GoogleDriveApiTest < ActionDispatch::IntegrationTest
         attachments: [{ id: "file-1" }]
       )
       assert_response :success, response.body
-      attachment_id = payload.fetch("attachments").first.fetch("id")
+      imported = payload.fetch("attachments").first
+      attachment_id = imported.fetch("id")
       attachment = RecordingStudio::Recording.find(attachment_id)
       assert_equal @page.id, attachment.parent_recording_id
       assert_equal "RecordingStudioAttachable::Attachment", attachment.recordable_type
       assert_equal "Brief.pdf", attachment.recordable.original_filename
+      assert_equal "Brief.pdf", imported.fetch("name")
+      assert_equal attachment.recordable.attachment_kind, imported.fetch("kind")
 
       call(
         :post,
@@ -105,6 +109,77 @@ class GoogleDriveApiTest < ActionDispatch::IntegrationTest
       assert_response :forbidden
       assert_equal "forbidden", json.dig("error", "code")
     end
+  end
+
+  test "list returns a second page for the next cursor" do
+    listed = []
+    page_one = @drive_page
+    page_two = RecordingStudioGoogleDrive::Page.new(entries: [@file], next_cursor: nil)
+    client = drive_client
+    client.define_singleton_method(:list) do |**kwargs|
+      listed << kwargs
+      kwargs[:cursor].to_s == "cursor-2" ? page_two : page_one
+    end
+
+    with_drive_client(client) do
+      first = call(:get, "/google_drive/list", @editor_token, recording_id: @page.id)
+      assert_response :success, response.body
+      assert_equal "cursor-2", first.fetch("next_cursor")
+
+      second = call(:get, "/google_drive/list", @editor_token, recording_id: @page.id, cursor: first.fetch("next_cursor"))
+      assert_response :success, response.body
+      assert_nil second.fetch("next_cursor")
+      refute second.key?("more")
+      assert_equal "cursor-2", listed.last.fetch(:cursor)
+    end
+  end
+
+  test "search returns a second page for the next cursor" do
+    searched = []
+    page_one = @drive_page
+    page_two = RecordingStudioGoogleDrive::Page.new(entries: [@file], next_cursor: nil)
+    client = drive_client
+    client.define_singleton_method(:search) do |**kwargs|
+      searched << kwargs
+      kwargs[:cursor].to_s == "cursor-2" ? page_two : page_one
+    end
+
+    with_drive_client(client) do
+      first = call(:get, "/google_drive/search", @editor_token, recording_id: @page.id, query: "brief")
+      assert_response :success, response.body
+      assert_equal "cursor-2", first.fetch("next_cursor")
+
+      second = call(
+        :get,
+        "/google_drive/search",
+        @editor_token,
+        recording_id: @page.id,
+        query: "brief",
+        cursor: first.fetch("next_cursor")
+      )
+      assert_response :success, response.body
+      assert_nil second.fetch("next_cursor")
+      refute second.key?("more")
+      assert_equal "cursor-2", searched.last.fetch(:cursor)
+    end
+  end
+
+  test "list without a token is unauthorized" do
+    call_without_token(:get, "/google_drive/list", recording_id: @page.id)
+    assert_response :unauthorized
+    assert_equal "authentication_failed", json.dig("error", "code")
+  end
+
+  test "search without a token is unauthorized" do
+    call_without_token(:get, "/google_drive/search", recording_id: @page.id, query: "brief")
+    assert_response :unauthorized
+    assert_equal "authentication_failed", json.dig("error", "code")
+  end
+
+  test "import without a token is unauthorized" do
+    call_without_token(:post, "/google_drive/import", recording_id: @page.id, attachments: [{ id: "file-1" }])
+    assert_response :unauthorized
+    assert_equal "authentication_failed", json.dig("error", "code")
   end
 
   test "excluded operations are not exposed on the public API" do
@@ -124,6 +199,12 @@ class GoogleDriveApiTest < ActionDispatch::IntegrationTest
     assert_includes summaries, "Google Drive - List"
     assert_includes summaries, "Google Drive - Search"
     assert_includes summaries, "Google Drive - Import"
+
+    registered = RecordingStudioApi.configuration.registered_endpoint_registry.all
+    titles = registered.filter_map { |endpoint| endpoint.openapi&.[](:title) || endpoint.openapi&.[]("title") }
+    assert_includes titles, "Google Drive - List"
+    assert_includes titles, "Google Drive - Search"
+    assert_includes titles, "Google Drive - Import"
 
     paths = document.fetch(:paths).keys
     refute(paths.any? { |path| path.include?("picker") })
@@ -185,10 +266,18 @@ class GoogleDriveApiTest < ActionDispatch::IntegrationTest
   end
 
   def call(method, path, token, params = {})
+    request_endpoint(method, path, params, headers(token))
+  end
+
+  def call_without_token(method, path, params = {})
+    request_endpoint(method, path, params, { "Accept" => "application/json" })
+  end
+
+  def request_endpoint(method, path, params, request_headers)
     if method == :get
-      send(method, "#{BASE}#{path}", params: params, headers: headers(token))
+      send(method, "#{BASE}#{path}", params: params, headers: request_headers)
     else
-      send(method, "#{BASE}#{path}", params: params, headers: headers(token), as: :json)
+      send(method, "#{BASE}#{path}", params: params, headers: request_headers, as: :json)
     end
     response.media_type.to_s.include?("json") ? JSON.parse(response.body) : {}
   rescue JSON::ParserError

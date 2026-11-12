@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require "test_helper"
+require "recording_studio_api/errors"
 require "recording_studio_attachable"
 require "recording_studio_google_drive/attachable"
 
@@ -14,18 +15,13 @@ class ApiAccessTest < Minitest::Test
   end
 
   def setup
-    install_api_errors!
     @recording = Recording.new("rec-1")
     @actor = Object.new
     @grant = Grant.new(@actor)
     @context = Context.new(params: { recording_id: "rec-1" }, access_grant: @grant)
   end
 
-  def teardown
-    remove_api_errors!
-  end
-
-  def test_api_authorize_uses_attachable_upload_permission
+  def test_allowed_uses_attachable_upload_permission
     allowed_args = nil
     allow = lambda { |action:, actor:, recording:|
       allowed_args = { action: action, actor: actor, recording: recording }
@@ -41,7 +37,7 @@ class ApiAccessTest < Minitest::Test
     assert_equal({ action: :upload, actor: @actor, recording: @recording }, allowed_args)
   end
 
-  def test_api_authorize_denies_when_upload_is_not_allowed
+  def test_allowed_denies_when_upload_is_not_allowed
     RecordingStudioGoogleDrive::Api::Access.stub(:recording_for, @recording) do
       RecordingStudioAttachable::Authorization.stub(:allowed?, false) do
         refute RecordingStudioGoogleDrive::Api::Access.allowed?(@context)
@@ -100,6 +96,15 @@ class ApiAccessTest < Minitest::Test
     assert_equal "drive down", error.message
   end
 
+  def test_reconnect_required_becomes_authentication_error
+    error = assert_raises(RecordingStudioApi::AuthenticationError) do
+      RecordingStudioGoogleDrive::Api::Access.raise_drive_error!(
+        RecordingStudioGoogleDrive::ReconnectRequired.new("Google Drive needs connecting again")
+      )
+    end
+    assert_equal "Google Drive needs connecting again", error.message
+  end
+
   def test_missing_recording_is_not_found
     RecordingStudioGoogleDrive::Api::Access.stub(:recording_for, nil) do
       error = assert_raises(RecordingStudioApi::NotFoundError) do
@@ -107,25 +112,5 @@ class ApiAccessTest < Minitest::Test
       end
       assert_equal "Recording was not found", error.message
     end
-  end
-
-  private
-
-  def install_api_errors!
-    return if defined?(RecordingStudioApi)
-
-    api = Module.new
-    api.const_set(:AuthorizationError, Class.new(StandardError))
-    api.const_set(:NotFoundError, Class.new(StandardError))
-    api.const_set(:InvalidActionInputError, Class.new(StandardError))
-    Object.const_set(:RecordingStudioApi, api)
-    @defined_api = true
-  end
-
-  def remove_api_errors!
-    return unless @defined_api
-
-    Object.send(:remove_const, :RecordingStudioApi)
-    @defined_api = false
   end
 end

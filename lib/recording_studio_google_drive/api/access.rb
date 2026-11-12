@@ -10,7 +10,6 @@ module RecordingStudioGoogleDrive
       def allowed?(context)
         recording = recording_for(context)
         return false if recording.blank? || actor_for(context).blank?
-        return false unless defined?(RecordingStudioAttachable::Authorization)
 
         RecordingStudioAttachable::Authorization.allowed?(
           action: :upload,
@@ -39,7 +38,9 @@ module RecordingStudioGoogleDrive
 
       def raise_drive_error!(error)
         case error
-        when ReconnectRequired, RequestError
+        when ReconnectRequired
+          raise RecordingStudioApi::AuthenticationError, error.message
+        when RequestError
           raise RecordingStudioApi::InvalidActionInputError, error.message
         else
           raise error
@@ -49,7 +50,6 @@ module RecordingStudioGoogleDrive
       def recording_for(context)
         id = context&.params&.[](:recording_id)
         return if id.blank?
-        return unless defined?(RecordingStudio::Recording)
 
         RecordingStudio::Recording.find_by(id: id)
       end

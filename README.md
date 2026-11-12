@@ -58,11 +58,11 @@ uploaded = client.upload_file(
 
 When Recording Studio API and Attachable are loaded, this gem registers three public API operations that MCP also advertises:
 
+- `google_drive.import` wraps `Attachable::RemoteImport.call`
 - `google_drive.list` wraps `Client#list`
 - `google_drive.search` wraps `Client#search`
-- `google_drive.import` wraps `Attachable::RemoteImport.call`
 
-OpenAPI titles are `Google Drive - List`, `Google Drive - Search`, and `Google Drive - Import`. Pass `recording_id` for the recording whose workspace Drive connection to use. Import attaches onto that recording. Authorization is Attachable's Accessible upload permission. The API does not expose `picker_access_token`, connect, disconnect, fetch, download, or upload.
+OpenAPI titles are `Google Drive - Import`, `Google Drive - List`, and `Google Drive - Search`. Pass `recording_id` for the recording whose workspace Drive connection to use. Import attaches onto that recording. List and search return `{ entries, next_cursor }`. Import returns `{ attachments: [{ id, name, kind }] }`. Authorization is Attachable's Accessible upload permission. A Drive reconnect maps to Recording Studio API's 401 authentication error. The API does not expose `picker_access_token`, connect, disconnect, fetch, download, or upload.
 
 The Google Picker in the browser needs that same short-lived token. Ask for it with `picker_access_token`. Hand it to the Picker only. Do not log it or persist it. Drive list, search, download, and upload still go through `Client`.
 
@@ -83,7 +83,7 @@ Download returns a `DownloadedFile` with `body`, `filename`, and `content_type`.
 
 ## Errors
 
-`RecordingStudioGoogleDrive::Error` is the base. Expired, revoked, insufficient-scope, `invalid_token`, and `invalid_grant` tokens raise `ReconnectRequired`. `unauthorized_client` and other Drive failures raise `RequestError`, which exposes `status` and `code`. The mapper uses HTTP status and Google's structured error `status`. It does not copy the response body into the message.
+`RecordingStudioGoogleDrive::Error` is the base. Expired, revoked, insufficient-scope, `invalid_token`, and `invalid_grant` tokens raise `ReconnectRequired`. On the public API that becomes Recording Studio API `AuthenticationError` (HTTP 401, `authentication_failed`). `unauthorized_client` and other Drive failures raise `RequestError`, which exposes `status` and `code`. The mapper uses HTTP status and Google's structured error `status`. It does not copy the response body into the message.
 
 ## Configuration
 

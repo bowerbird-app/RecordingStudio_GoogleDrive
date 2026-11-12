@@ -44,26 +44,29 @@ class ApiRegistrationTest < Minitest::Test
     assert RecordingStudioGoogleDrive::Api.register!
 
     names = api.endpoints.map { |endpoint| endpoint.name.to_s }
-    assert_equal %w[google_drive.list google_drive.search google_drive.import], names
+    assert_equal %w[google_drive.import google_drive.list google_drive.search], names
     assert(api.endpoints.all? { |endpoint| endpoint.api == :public })
 
-    list, search, import = api.endpoints
+    import, list, search = api.endpoints
+    assert_equal :post, import.http_verb
+    assert_equal "google_drive/import", import.path
+    assert_equal RecordingStudioGoogleDrive::Api::Import, import.handler
+    assert_equal "Google Drive - Import", import.openapi.fetch(:title)
+    assert_equal "Google Drive - Import", import.openapi.fetch(:summary)
+    assert import.input_contract.dig(:fields, :attachments, :required)
+
     assert_equal :get, list.http_verb
     assert_equal "google_drive/list", list.path
     assert_equal RecordingStudioGoogleDrive::Api::List, list.handler
+    assert_equal "Google Drive - List", list.openapi.fetch(:title)
     assert_equal "Google Drive - List", list.openapi.fetch(:summary)
 
     assert_equal :get, search.http_verb
     assert_equal "google_drive/search", search.path
     assert_equal RecordingStudioGoogleDrive::Api::Search, search.handler
+    assert_equal "Google Drive - Search", search.openapi.fetch(:title)
     assert_equal "Google Drive - Search", search.openapi.fetch(:summary)
     assert search.input_contract.dig(:fields, :query, :required)
-
-    assert_equal :post, import.http_verb
-    assert_equal "google_drive/import", import.path
-    assert_equal RecordingStudioGoogleDrive::Api::Import, import.handler
-    assert_equal "Google Drive - Import", import.openapi.fetch(:summary)
-    assert import.input_contract.dig(:fields, :attachments, :required)
   end
 
   def test_excluded_operations_are_not_registered
@@ -106,6 +109,7 @@ class ApiRegistrationTest < Minitest::Test
     end
     hide_real_api!
     Object.const_set(:RecordingStudioApi, api)
+    @installed_fake = true
     api
   end
 
@@ -117,8 +121,11 @@ class ApiRegistrationTest < Minitest::Test
   end
 
   def remove_fake_api!
+    return unless @hidden_api || @installed_fake
+
     Object.send(:remove_const, :RecordingStudioApi) if Object.const_defined?(:RecordingStudioApi, false)
     Object.const_set(:RecordingStudioApi, @hidden_api) if @hidden_api
     @hidden_api = nil
+    @installed_fake = nil
   end
 end

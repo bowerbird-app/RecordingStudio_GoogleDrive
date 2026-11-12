@@ -12,9 +12,9 @@ module RecordingStudioGoogleDrive
       module_function
 
       def register!
+        register_import!
         register_list!
         register_search!
-        register_import!
       end
 
       def register_list!
@@ -63,13 +63,11 @@ module RecordingStudioGoogleDrive
       end
 
       def already_registered?(name)
-        return false unless RecordingStudioApi.respond_to?(:registered_endpoint)
-
         RecordingStudioApi.registered_endpoint(name, api: API).present?
       end
 
       def openapi(summary, description, parameters = nil)
-        metadata = { tags: OPENAPI_TAGS, summary: summary, description: description }
+        metadata = { tags: OPENAPI_TAGS, title: summary, summary: summary, description: description }
         metadata[:parameters] = parameters if parameters
         metadata
       end
