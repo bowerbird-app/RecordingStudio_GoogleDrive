@@ -68,6 +68,13 @@ class EngineTest < Minitest::Test
     assert_equal 25, RecordingStudioGoogleDrive.configuration.page_size
   end
 
+  def test_engine_registers_api_after_attachable
+    names = RecordingStudioGoogleDrive::Engine.initializers.map(&:name)
+
+    assert_includes names, "recording_studio_google_drive.api"
+    assert_includes names, "recording_studio_google_drive.load_attachable_addon"
+  end
+
   def test_engine_does_not_class_eval_host_models
     source = File.read(File.expand_path("../lib/recording_studio_google_drive/engine.rb", __dir__))
 

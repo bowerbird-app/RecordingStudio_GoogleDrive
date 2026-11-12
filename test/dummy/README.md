@@ -37,6 +37,7 @@ Without Google secrets, dummy registers `:google_drive` against `/fake_oauth/*`.
 - `/recording_studio_attachable/recordings/:id/attachments/upload` - Attachable upload page (seeds print the Getting Started page id)
 - `/recording_studio` - redirects to `/` while the mounted Recording Studio engine stays available under that prefix for non-root routes
 - `/recording_studio_oauth` - Oauth engine (outbound callback lives here)
+- `/recording_studio_api/api/v1/google_drive/list`, `/google_drive/search`, and `/google_drive/import` - API operations for list, search, and import
 - `/users/sign_in` - Devise sign-in page
 - `/docs/install`, `/docs/config` - dummy-only starter pages
 - `/up` - Rails health check
