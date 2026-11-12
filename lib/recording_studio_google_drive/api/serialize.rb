@@ -20,8 +20,8 @@ module RecordingStudioGoogleDrive
         attachment = recording.recordable
         {
           id: recording.id,
-          name: attachment.respond_to?(:name) ? attachment.name : nil,
-          kind: attachment.respond_to?(:attachment_kind) ? attachment.attachment_kind : nil
+          name: attachment&.name,
+          kind: attachment&.attachment_kind
         }
       end
     end

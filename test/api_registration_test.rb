@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require "test_helper"
+require "recording_studio_api"
 require "recording_studio_attachable"
 
 class ApiRegistrationTest < Minitest::Test
@@ -15,14 +16,10 @@ class ApiRegistrationTest < Minitest::Test
     keyword_init: true
   )
 
-  def teardown
-    remove_fake_api!
-  end
-
   def test_registration_is_a_noop_without_recording_studio_api
-    hide_real_api!
-    refute Object.const_defined?(:RecordingStudioApi, false)
-    assert_nil RecordingStudioGoogleDrive::Api.register!
+    RecordingStudioGoogleDrive::Api.stub(:recording_studio_api_available?, false) do
+      assert_nil RecordingStudioGoogleDrive::Api.register!
+    end
   end
 
   def test_gemspec_omits_recording_studio_api_runtime_dependency
@@ -39,15 +36,13 @@ class ApiRegistrationTest < Minitest::Test
   end
 
   def test_registers_list_search_and_import
-    api = install_fake_api!
+    endpoints = capture_registrations { RecordingStudioGoogleDrive::Api.register! }
 
-    assert RecordingStudioGoogleDrive::Api.register!
-
-    names = api.endpoints.map { |endpoint| endpoint.name.to_s }
+    names = endpoints.map { |endpoint| endpoint.name.to_s }
     assert_equal %w[google_drive.import google_drive.list google_drive.search], names
-    assert(api.endpoints.all? { |endpoint| endpoint.api == :public })
+    assert(endpoints.all? { |endpoint| endpoint.api == :public })
 
-    import, list, search = api.endpoints
+    import, list, search = endpoints
     assert_equal :post, import.http_verb
     assert_equal "google_drive/import", import.path
     assert_equal RecordingStudioGoogleDrive::Api::Import, import.handler
@@ -70,11 +65,9 @@ class ApiRegistrationTest < Minitest::Test
   end
 
   def test_excluded_operations_are_not_registered
-    api = install_fake_api!
-    RecordingStudioGoogleDrive::Api.register!
-
-    names = api.endpoints.map { |endpoint| endpoint.name.to_s }
-    paths = api.endpoints.map(&:path)
+    endpoints = capture_registrations { RecordingStudioGoogleDrive::Api.register! }
+    names = endpoints.map { |endpoint| endpoint.name.to_s }
+    paths = endpoints.map(&:path)
 
     excluded_names = %w[
       picker_access_token google_drive.connect google_drive.disconnect
@@ -88,44 +81,27 @@ class ApiRegistrationTest < Minitest::Test
   end
 
   def test_register_is_idempotent
-    api = install_fake_api!
-
-    assert RecordingStudioGoogleDrive::Api.register!
-    assert RecordingStudioGoogleDrive::Api.register!
-    assert_equal 3, api.endpoints.size
+    endpoints = capture_registrations do
+      assert RecordingStudioGoogleDrive::Api.register!
+      assert RecordingStudioGoogleDrive::Api.register!
+    end
+    assert_equal 3, endpoints.size
   end
 
   private
 
-  def install_fake_api!
-    api = Module.new
-    endpoints = []
-    api.define_singleton_method(:endpoints) { endpoints }
-    api.define_singleton_method(:register_endpoint) do |name, **options|
-      endpoints << FakeEndpoint.new(name: name, **options.slice(*FakeEndpoint.members))
+  def capture_registrations(&block)
+    captured = []
+    register = lambda do |name, **options|
+      captured << FakeEndpoint.new(name: name, **options.slice(*FakeEndpoint.members))
     end
-    api.define_singleton_method(:registered_endpoint) do |name, api: :public|
-      endpoints.find { |endpoint| endpoint.name == name && endpoint.api == api }
+    lookup = lambda do |name, api: :public|
+      captured.find { |endpoint| endpoint.name == name && endpoint.api == api }
     end
-    hide_real_api!
-    Object.const_set(:RecordingStudioApi, api)
-    @installed_fake = true
-    api
-  end
 
-  def hide_real_api!
-    return if @hidden_api
-    return unless Object.const_defined?(:RecordingStudioApi, false)
-
-    @hidden_api = Object.send(:remove_const, :RecordingStudioApi)
-  end
-
-  def remove_fake_api!
-    return unless @hidden_api || @installed_fake
-
-    Object.send(:remove_const, :RecordingStudioApi) if Object.const_defined?(:RecordingStudioApi, false)
-    Object.const_set(:RecordingStudioApi, @hidden_api) if @hidden_api
-    @hidden_api = nil
-    @installed_fake = nil
+    RecordingStudioApi.stub(:registered_endpoint, lookup) do
+      RecordingStudioApi.stub(:register_endpoint, register, &block)
+    end
+    captured
   end
 end

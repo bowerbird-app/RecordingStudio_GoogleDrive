@@ -34,7 +34,7 @@ module RecordingStudioGoogleDrive
       end
 
       def impersonator
-        context.authorized_by if context.respond_to?(:authorized_by)
+        context.authorized_by
       end
 
       def finish(result)
