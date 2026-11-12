@@ -4,6 +4,17 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.7.0] - 2026-11-12
+
+### Added
+- API and MCP operations `google_drive.list`, `google_drive.search`, and `google_drive.import`. Each is a thin wrapper over `Client#list`, `Client#search`, and `Attachable::RemoteImport.call`. The gem registers them with Recording Studio API when that gem and Attachable are loaded. MCP advertises the same names. OpenAPI titles are `Google Drive - List`, `Google Drive - Search`, and `Google Drive - Import`.
+- Import authorizes with Accessible through Attachable's existing upload permission on the target recording. List and search use that same upload check.
+
+### Upgrade notes
+- Hosts that already mount Recording Studio API and Attachable get the three operations on the public API. No new gemspec dependency. Picker tokens, connect, disconnect, fetch, download, and upload stay off the API.
+
+[0.7.0]: https://github.com/bowerbird-app/RecordingStudio_GoogleDrive/releases/tag/v0.7.0
+
 ## [0.6.0] - 2026-11-05
 
 ### Changed

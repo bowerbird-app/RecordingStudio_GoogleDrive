@@ -56,6 +56,14 @@ uploaded = client.upload_file(
 
 `Client.for` calls `RecordingStudioOauth.connection_for(provider:, root:, actor:)`. Oauth refreshes an expired token. No connection, a revoked connection, or a failed refresh raises `ReconnectRequired`. Tokens are never written to the session, logs, or exception messages.
 
+When Recording Studio API and Attachable are loaded, this gem registers three public API operations that MCP also advertises:
+
+- `google_drive.list` wraps `Client#list`
+- `google_drive.search` wraps `Client#search`
+- `google_drive.import` wraps `Attachable::RemoteImport.call`
+
+OpenAPI titles are `Google Drive - List`, `Google Drive - Search`, and `Google Drive - Import`. Pass `recording_id` for the recording whose workspace Drive connection to use. Import attaches onto that recording. Authorization is Attachable's Accessible upload permission. The API does not expose `picker_access_token`, connect, disconnect, fetch, download, or upload.
+
 The Google Picker in the browser needs that same short-lived token. Ask for it with `picker_access_token`. Hand it to the Picker only. Do not log it or persist it. Drive list, search, download, and upload still go through `Client`.
 
 ```ruby
@@ -129,7 +137,7 @@ After seed, open `/recording_studio_attachable/recordings/<page-recording-id>/at
 
 ## Development
 
-Ruby 3.3.12. Rails 8.1. The gemspec requires Recording Studio `>= 6.1, < 7` (dummy GitHub tag `v6.3.0`). Oauth `>= 0.17.0, < 1.0` (dummy GitHub tag `v0.20.0`). Attachable is optional (`>= 0.21.0, < 1.0`; dummy and CI pin tag `v0.22.0`). Dummy and CI also pin Flatpack `v0.1.341`, Accessible `v0.24.1`, API `v0.17.1`, Logs `v0.7.3`, Metrics `v0.7.2`, Cache `v0.6.2`, Trashable `v0.12.2`, and Root Switchable `v0.11.5`.
+Ruby 3.3.12. Rails 8.1. The gemspec requires Recording Studio `>= 6.1, < 7` (dummy GitHub tag `v6.3.0`). Oauth `>= 0.17.0, < 1.0` (dummy GitHub tag `v0.20.0`). Attachable is optional (`>= 0.21.0, < 1.0`; dummy and CI pin tag `v0.22.0`). Dummy and CI also pin Flatpack `v0.1.341`, Accessible `v0.24.1`, API `v0.17.1`, Logs `v0.7.3`, Metrics `v0.7.2`, Cache `v0.6.2`, Trashable `v0.12.2`, and Root Switchable `v0.11.5`. API `v0.17.1` already has `register_endpoint`, so this gem does not raise that pin.
 
 ```bash
 bundle install

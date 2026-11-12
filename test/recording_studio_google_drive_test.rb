@@ -4,7 +4,7 @@ require "test_helper"
 
 class RecordingStudioGoogleDriveTest < Minitest::Test
   def test_version_matches_release
-    assert_equal "0.6.0", ::RecordingStudioGoogleDrive::VERSION
+    assert_equal "0.7.0", ::RecordingStudioGoogleDrive::VERSION
   end
 
   def test_engine_exists
@@ -20,6 +20,7 @@ class RecordingStudioGoogleDriveTest < Minitest::Test
     refute_includes gemspec, '">= 4.2"'
     assert_includes gemspec, 'spec.add_dependency "recording_studio_oauth", ">= 0.17.0", "< 1.0"'
     refute_includes gemspec, "recording_studio_attachable"
+    refute_includes gemspec, "recording_studio_api"
     assert_includes gemfile, "recording_studio_attachable"
     assert_includes gemfile, 'tag: "v0.22.0"'
     assert_includes gemspec, 'spec.required_ruby_version = ">= 3.3.0"'
@@ -274,6 +275,7 @@ class RecordingStudioGoogleDriveTest < Minitest::Test
     assert_includes readme_source, "This Rails app exists to validate the Recording Studio Google Drive addon"
     assert_includes readme_source, "/recording_studio"
     assert_includes readme_source, "redirects to `/`"
+    assert_includes readme_source, "google_drive/list"
     refute_includes readme_source, "flat_pack_sidebar"
   end
 
@@ -302,6 +304,10 @@ class RecordingStudioGoogleDriveTest < Minitest::Test
     assert_includes readme, "config.attachable.api_key"
     assert_includes readme, "register_upload_provider"
     assert_includes readme, "ProviderController"
+    assert_includes readme, "google_drive.list"
+    assert_includes readme, "google_drive.search"
+    assert_includes readme, "google_drive.import"
+    assert_includes readme, "Google Drive - Import"
     assert_includes readme, "ImportRemoteFiles"
     assert_includes readme, "The first-class Attachable path is read-only Drive"
     assert_includes readme, "drive.readonly"

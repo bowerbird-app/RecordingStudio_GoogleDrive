@@ -21,6 +21,7 @@ require "recording_studio_google_drive/http"
 require "recording_studio_google_drive/client"
 require "recording_studio_google_drive/configuration"
 require "recording_studio_google_drive/engine"
+require "recording_studio_google_drive/api"
 
 module RecordingStudioGoogleDrive
   MINIMUM_ATTACHABLE_VERSION = "0.21.0"

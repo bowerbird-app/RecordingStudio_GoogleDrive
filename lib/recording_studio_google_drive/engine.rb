@@ -40,5 +40,9 @@ module RecordingStudioGoogleDrive
         RecordingStudioGoogleDrive::Attachable.register_upload_provider!
       end
     end
+
+    initializer "recording_studio_google_drive.api" do
+      config.to_prepare { RecordingStudioGoogleDrive::Api.register! }
+    end
   end
 end
