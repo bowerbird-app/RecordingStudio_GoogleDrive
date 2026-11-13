@@ -46,6 +46,7 @@ class RootSwitchDropdownTest < ActionDispatch::IntegrationTest
 
     workspace = Workspace.create!(name: "Switch Page Workspace")
     RecordingStudio.root_recording_for(workspace)
+    grant_view_on_workspace_roots!(user)
 
     get "/recording_studio_root_switchable/v1/root_switch?scope=all_workspaces"
 
@@ -66,6 +67,7 @@ class RootSwitchDropdownTest < ActionDispatch::IntegrationTest
     target_workspace = Workspace.create!(name: "Target Workspace")
     target_root_recording = RecordingStudio.root_recording_for(target_workspace)
     RecordingStudio.root_recording_for(source_workspace)
+    grant_view_on_workspace_roots!(user)
 
     patch "/recording_studio_root_switchable/v1/root_switch", params: {
       scope: "all_workspaces",
@@ -90,6 +92,7 @@ class RootSwitchDropdownTest < ActionDispatch::IntegrationTest
     target_workspace = Workspace.create!(name: "Fallback Target Workspace")
     target_root_recording = RecordingStudio.root_recording_for(target_workspace)
     RecordingStudio.root_recording_for(source_workspace)
+    grant_view_on_workspace_roots!(user)
 
     patch "/recording_studio_root_switchable/v1/root_switch", params: {
       scope: "all_workspaces",
@@ -100,5 +103,27 @@ class RootSwitchDropdownTest < ActionDispatch::IntegrationTest
     }
 
     assert_redirected_to "/"
+  end
+
+  private
+
+  # Root Switchable 0.15 requires Accessible :view on the current root before
+  # the mounted switch page. Seeded workspaces may already have another owner,
+  # so the grant is written through Accessible's creation context.
+  def grant_view_on_workspace_roots!(user)
+    Workspace.find_each do |workspace|
+      root = RecordingStudio.root_recording_for(workspace)
+      next if RecordingStudioAccessible.authorized?(actor: user, recording: root, role: :view)
+
+      RecordingStudioAccessible::AccessCreationContext.allow do
+        RecordingStudio.root_recording_or_self(root).record(
+          RecordingStudio::Access,
+          parent_recording: root
+        ) do |access|
+          access.actor = user
+          access.role = "view"
+        end
+      end
+    end
   end
 end
