@@ -193,6 +193,10 @@ class GoogleDriveOauthTest < ActionDispatch::IntegrationTest
   end
 
   def switch_to_workspace_root!
+    # Root Switchable 0.15 forbids the switch page unless the actor can :view
+    # the current root. Seeded workspaces can sort ahead of this test's root.
+    grant_view_on_workspace_roots!(@user)
+
     patch "/recording_studio_root_switchable/v1/root_switch", params: {
       scope: "all_workspaces",
       root_switch: {
@@ -200,6 +204,24 @@ class GoogleDriveOauthTest < ActionDispatch::IntegrationTest
         return_to: "/"
       }
     }
+    assert_redirected_to "/"
+  end
+
+  def grant_view_on_workspace_roots!(user)
+    Workspace.find_each do |workspace|
+      root = RecordingStudio.root_recording_for(workspace)
+      next if RecordingStudioAccessible.authorized?(actor: user, recording: root, role: :view)
+
+      RecordingStudioAccessible::AccessCreationContext.allow do
+        RecordingStudio.root_recording_or_self(root).record(
+          RecordingStudio::Access,
+          parent_recording: root
+        ) do |access|
+          access.actor = user
+          access.role = "view"
+        end
+      end
+    end
   end
 
   def follow_connect!
