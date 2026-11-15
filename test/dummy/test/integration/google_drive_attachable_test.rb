@@ -17,7 +17,7 @@ class GoogleDriveAttachableTest < ActionDispatch::IntegrationTest
     @workspace = Workspace.create!(name: "Drive Attachable #{SecureRandom.hex(4)}")
     sign_in @user
     Current.actor = @user
-    @root = RecordingStudio.root_recording_for(@workspace)
+    @root = RecordingStudio.create_root_recording!(@workspace, actor: @user)
     grant_workspace_access!(@root)
     @page = Page.create!(title: "Drive page #{SecureRandom.hex(4)}")
     @recording = RecordingStudio.record!(

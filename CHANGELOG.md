@@ -4,6 +4,27 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.7.0] - 2026-11-15
+
+### Changed
+- The gemspec requires `recording_studio >= 7.0, < 8.0` and `recording_studio_oauth >= 0.22.0, < 1.0`.
+- Dummy and development Gemfiles pin Recording Studio `v7.0.0`, Oauth `v0.22.0`, Accessible `v0.44.0`, Admin `v2.16.0`, API `v0.24.0`, Logs `v0.8.0`, Root Switchable `v0.16.0`, Site Settings `v0.6.0`, Attachable `v0.28.0`, Moveable `v5.0.0`, Trashable `v0.17.0`, Metrics `v0.9.0`, Cache `v0.6.3`, FlatPack `v0.1.376`, and Icons `v0.2.1`.
+- Dummy roots are created with `create_root_recording!`. `root_recording_for` only finds an existing root.
+- The dummy allows a write when an actor is present. It copies the events `root_recording_id` migration.
+- Dummy queries that listed kept recordings use `Recording.kept`. Admin uses `access_recording_resolver`.
+- Dummy pins Puma `8.1.0` and `msgpack >= 1.8.7`.
+
+### Upgrade notes
+- Hosts need Recording Studio 7.0 or newer, and below 8. Oauth 0.22 or newer, and below 1.0. Google Drive OAuth, token, and scope behaviour is unchanged.
+- Paths that created a root by calling `root_recording_for` call `RecordingStudio.create_root_recording!(recordable, actor:)`. Lookup stays on `root_recording_for` and handles nil.
+- Set `config.authorize_write`. `create_root_recording!` calls it with `root_recording` nil. Do not set `allow_unauthorized_writes`.
+- Copy Recording Studio's events `root_recording_id` migration when the host schema does not have that column.
+- With Trashable 0.17, use `Recording.kept`. `recording_studio_trashable_kept_sql` is gone.
+- With Admin 2.16, set `access_recording_resolver`. `site_admin_recording_resolver` is gone.
+- Rebundle. The dummy lockfile uses Puma 8.1.0 and msgpack 1.8.7 or newer.
+
+[0.7.0]: https://github.com/bowerbird-app/RecordingStudio_GoogleDrive/compare/v0.6.1...v0.7.0
+
 ## [0.6.1] - 2026-11-15
 
 ### Changed

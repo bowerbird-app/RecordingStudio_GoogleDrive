@@ -155,9 +155,9 @@ class OauthProviderTest < Minitest::Test
     gemfile = File.read(File.expand_path("../Gemfile", __dir__))
     dummy_gemfile = File.read(File.expand_path("dummy/Gemfile", __dir__))
 
-    assert_includes gemspec, 'spec.add_dependency "recording_studio_oauth", ">= 0.17.0", "< 1.0"'
-    assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_Oauth", tag: "v0.21.8"'
-    assert_includes dummy_gemfile, 'github: "bowerbird-app/RecordingStudio_Oauth", tag: "v0.21.8"'
+    assert_includes gemspec, 'spec.add_dependency "recording_studio_oauth", ">= 0.22.0", "< 1.0"'
+    assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_Oauth", tag: "v0.22.0"'
+    assert_includes dummy_gemfile, 'github: "bowerbird-app/RecordingStudio_Oauth", tag: "v0.22.0"'
   end
 
   private
