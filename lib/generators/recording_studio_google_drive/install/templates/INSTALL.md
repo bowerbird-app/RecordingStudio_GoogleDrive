@@ -1,4 +1,4 @@
-RecordingStudioGoogleDrive install complete. This gem needs Recording Studio `>= 6.1, < 7`.
+RecordingStudioGoogleDrive install complete. This gem needs Recording Studio `>= 6.1, < 8.0`.
 
 Next steps:
 

@@ -4,6 +4,16 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.1] - 2026-11-15
+
+### Changed
+- Allow recording_studio < 8.0 (core 7 phase 1).
+
+### Upgrade notes
+- Hosts can use Recording Studio 7.x. The gemspec requires `recording_studio >= 6.1, < 8.0`. The floor stays 6.1 so the existing `v6.7.0` pin still resolves. Dummy and development Gemfiles stay on that tag.
+
+[0.6.1]: https://github.com/bowerbird-app/RecordingStudio_GoogleDrive/compare/v0.6.0...v0.6.1
+
 ## [0.6.0] - 2026-11-05
 
 ### Changed

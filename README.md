@@ -129,7 +129,7 @@ After seed, open `/recording_studio_attachable/recordings/<page-recording-id>/at
 
 ## Development
 
-Ruby 3.3.12. Rails 8.1. The gemspec requires Recording Studio `>= 6.1, < 7` (dummy GitHub tag `v6.7.0`). Oauth `>= 0.17.0, < 1.0` (dummy GitHub tag `v0.21.8`). Attachable is optional (`>= 0.21.0, < 1.0`; dummy and CI pin tag `v0.23.0`). Dummy and CI also pin Flatpack `v0.1.357`, Accessible `v0.32.0`, API `v0.23.1`, Logs `v0.7.4`, Metrics `v0.8.0`, Cache `v0.6.3`, Icons `v0.2.1`, Moveable `v4.1.1`, Trashable `v0.14.0`, and Root Switchable `v0.15.0`.
+Ruby 3.3.12. Rails 8.1. The gemspec requires Recording Studio `>= 6.1, < 8.0` (dummy GitHub tag `v6.7.0`). Oauth `>= 0.17.0, < 1.0` (dummy GitHub tag `v0.21.8`). Attachable is optional (`>= 0.21.0, < 1.0`; dummy and CI pin tag `v0.23.0`). Dummy and CI also pin Flatpack `v0.1.357`, Accessible `v0.32.0`, API `v0.23.1`, Logs `v0.7.4`, Metrics `v0.8.0`, Cache `v0.6.3`, Icons `v0.2.1`, Moveable `v4.1.1`, Trashable `v0.14.0`, and Root Switchable `v0.15.0`.
 
 ```bash
 bundle install
