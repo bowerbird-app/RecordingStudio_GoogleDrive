@@ -27,7 +27,7 @@ class RootSwitchDropdownTest < ActionDispatch::IntegrationTest
     sign_in user
 
     workspace = Workspace.create!(name: "Dropdown Workspace")
-    RecordingStudio.root_recording_for(workspace)
+    create_workspace_root!(workspace, actor: user)
 
     get root_path
 
@@ -45,7 +45,7 @@ class RootSwitchDropdownTest < ActionDispatch::IntegrationTest
     sign_in user
 
     workspace = Workspace.create!(name: "Switch Page Workspace")
-    RecordingStudio.root_recording_for(workspace)
+    create_workspace_root!(workspace, actor: user)
     grant_view_on_workspace_roots!(user)
 
     get "/recording_studio_root_switchable/v1/root_switch?scope=all_workspaces"
@@ -65,8 +65,8 @@ class RootSwitchDropdownTest < ActionDispatch::IntegrationTest
 
     source_workspace = Workspace.create!(name: "Source Workspace")
     target_workspace = Workspace.create!(name: "Target Workspace")
-    target_root_recording = RecordingStudio.root_recording_for(target_workspace)
-    RecordingStudio.root_recording_for(source_workspace)
+    target_root_recording = create_workspace_root!(target_workspace, actor: user)
+    create_workspace_root!(source_workspace, actor: user)
     grant_view_on_workspace_roots!(user)
 
     patch "/recording_studio_root_switchable/v1/root_switch", params: {
@@ -90,8 +90,8 @@ class RootSwitchDropdownTest < ActionDispatch::IntegrationTest
 
     source_workspace = Workspace.create!(name: "Fallback Source Workspace")
     target_workspace = Workspace.create!(name: "Fallback Target Workspace")
-    target_root_recording = RecordingStudio.root_recording_for(target_workspace)
-    RecordingStudio.root_recording_for(source_workspace)
+    target_root_recording = create_workspace_root!(target_workspace, actor: user)
+    create_workspace_root!(source_workspace, actor: user)
     grant_view_on_workspace_roots!(user)
 
     patch "/recording_studio_root_switchable/v1/root_switch", params: {
@@ -107,12 +107,19 @@ class RootSwitchDropdownTest < ActionDispatch::IntegrationTest
 
   private
 
-  # Root Switchable 0.15 requires Accessible :view on the current root before
+  def create_workspace_root!(workspace, actor:)
+    Current.actor = actor
+    RecordingStudio.create_root_recording!(workspace, actor: actor)
+  end
+
+  # Root Switchable 0.16 requires Accessible :view on the current root before
   # the mounted switch page. Seeded workspaces may already have another owner,
   # so the grant is written through Accessible's creation context.
   def grant_view_on_workspace_roots!(user)
+    Current.actor = user
     Workspace.find_each do |workspace|
       root = RecordingStudio.root_recording_for(workspace)
+      next if root.nil?
       next if RecordingStudioAccessible.authorized?(actor: user, recording: root, role: :view)
 
       RecordingStudioAccessible::AccessCreationContext.allow do

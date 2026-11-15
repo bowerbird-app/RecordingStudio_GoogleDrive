@@ -15,7 +15,8 @@ class GoogleDriveOauthTest < ActionDispatch::IntegrationTest
       password_confirmation: "Password123!"
     )
     @workspace = Workspace.create!(name: "Drive Workspace #{SecureRandom.hex(4)}")
-    @root_recording = RecordingStudio.root_recording_for(@workspace)
+    Current.actor = @user
+    @root_recording = RecordingStudio.create_root_recording!(@workspace, actor: @user)
     grant_workspace_access!(@root_recording)
     sign_in @user
   end
@@ -193,7 +194,7 @@ class GoogleDriveOauthTest < ActionDispatch::IntegrationTest
   end
 
   def switch_to_workspace_root!
-    # Root Switchable 0.15 forbids the switch page unless the actor can :view
+    # Root Switchable 0.16 forbids the switch page unless the actor can :view
     # the current root. Seeded workspaces can sort ahead of this test's root.
     grant_view_on_workspace_roots!(@user)
 
@@ -208,8 +209,10 @@ class GoogleDriveOauthTest < ActionDispatch::IntegrationTest
   end
 
   def grant_view_on_workspace_roots!(user)
+    Current.actor = user
     Workspace.find_each do |workspace|
       root = RecordingStudio.root_recording_for(workspace)
+      next if root.nil?
       next if RecordingStudioAccessible.authorized?(actor: user, recording: root, role: :view)
 
       RecordingStudioAccessible::AccessCreationContext.allow do

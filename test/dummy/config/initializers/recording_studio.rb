@@ -13,9 +13,9 @@ RecordingStudio.configure do |config|
   config.require_recordable_declarations = true
   config.app_name = "Google Drive Demo" if config.respond_to?(:app_name=)
   config.actor = -> { Current.actor }
-  # Recording Studio 6.5 closes writes unless the host sets an authorizer.
-  # This dummy records during boot and tests without a signed-in actor.
-  config.allow_unauthorized_writes = true if config.respond_to?(:allow_unauthorized_writes=)
+  # Core 7 denies a write unless this callback allows it.
+  # A present actor may write, including a new root (root_recording is nil).
+  config.authorize_write = ->(actor:, **) { actor.present? }
   config.event_notifications_enabled = true
   config.idempotency_mode = :return_existing
   config.recordable_dup_strategy = :dup

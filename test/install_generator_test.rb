@@ -51,7 +51,8 @@ class InstallGeneratorTest < Minitest::Test
     initializer = File.read(INITIALIZER_TEMPLATE_PATH)
     assert_includes initializer, "RecordingStudioGoogleDrive.register_oauth_provider"
 
-    assert_includes install_guide, ">= 6.1, < 8.0"
+    assert_includes install_guide, ">= 7.0, < 8.0"
+    assert_includes install_guide, ">= 0.22.0, < 1.0"
     assert_includes install_guide, "Client.for"
     assert_includes install_guide, "client_id"
     assert_includes install_guide, "config.attachable.enabled"
