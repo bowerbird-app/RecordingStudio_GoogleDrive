@@ -54,6 +54,7 @@ class RecordingStudioHostTest < ActiveSupport::TestCase
     page_recording = RecordingStudio::Recording.find_by!(recordable: page)
 
     assert_nil Current.actor
+    assert_equal root_recording, RecordingStudioAccessible.configuration.admin_root_resolver.call
     assert_nil root_recording.parent_recording_id
     assert_nil accessible_root_recording.parent_recording_id
     assert_nil private_root_recording.parent_recording_id
