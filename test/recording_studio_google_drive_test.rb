@@ -25,7 +25,7 @@ class RecordingStudioGoogleDriveTest < Minitest::Test
     refute_includes gemspec, '"recording_studio_oauth", "~>'
     refute_includes gemspec, "recording_studio_attachable"
     assert_includes gemfile, "recording_studio_attachable"
-    assert_includes gemfile, 'tag: "v0.28.0"'
+    assert_includes gemfile, 'tag: "v0.31.0"'
     assert_includes gemspec, 'spec.required_ruby_version = ">= 3.3.0"'
   end
 
@@ -57,32 +57,34 @@ class RecordingStudioGoogleDriveTest < Minitest::Test
     gemfile = File.read(File.expand_path("dummy/Gemfile", __dir__))
     root_gemfile = File.read(File.expand_path("../Gemfile", __dir__))
 
-    assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio", tag: "v7.0.0"'
+    assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio", tag: "v7.3.0"'
+    refute_includes gemfile, 'tag: "v7.0.0"'
     refute_includes gemfile, 'tag: "v6.7.0"'
     refute_includes gemfile, 'tag: "v6.3.0"'
     refute_includes gemfile, 'tag: "v4.7.0"'
     refute_includes gemfile, 'tag: "v4.6.0"'
     refute_includes gemfile, 'tag: "v4.5.0"'
-    assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_accessible", tag: "v0.44.0"'
-    assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_trashable", tag: "v0.17.0", require: false'
+    assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_accessible", tag: "v0.45.1"'
+    assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_trashable", tag: "v1.0.1", require: false'
+    refute_includes gemfile, 'github: "bowerbird-app/RecordingStudio_accessible", tag: "v0.44.0"'
     refute_includes gemfile, 'github: "bowerbird-app/RecordingStudio_accessible", tag: "v0.32.0"'
     refute_includes gemfile, 'github: "bowerbird-app/RecordingStudio_accessible", tag: "v0.24.1"'
     refute_includes gemfile, 'github: "bowerbird-app/RecordingStudio_accessible", tag: "v0.18.0"'
     refute_includes gemfile, 'github: "bowerbird-app/RecordingStudio_accessible", tag: "v0.17.0"'
     refute_includes gemfile, 'github: "bowerbird-app/RecordingStudio_accessible", tag: "v0.15.0"'
-    assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_Oauth", tag: "v0.22.0"'
-    assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_admin", tag: "v2.16.0"'
+    assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_Oauth", tag: "v0.25.0"'
+    assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_admin", tag: "v2.18.0"'
     assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_root_switchable", tag: "v0.16.0"'
-    assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_cache", tag: "v0.6.3"'
+    assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_cache", tag: "v0.7.0"'
     assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_metrics", tag: "v0.9.0"'
-    assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_icons", tag: "v0.2.1"'
-    assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_moveable", tag: "v5.0.0"'
+    assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_icons", tag: "v0.4.0"'
+    assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_moveable", tag: "v6.0.0"'
     assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_attachable",'
-    assert_includes gemfile, 'tag: "v0.28.0"'
+    assert_includes gemfile, 'tag: "v0.31.0"'
     assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_logs", tag: "v0.8.0"'
     assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_site_settings", tag: "v0.6.0"'
-    assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_api", tag: "v0.24.0"'
-    assert_includes gemfile, 'gem "puma", "8.1.0"'
+    assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_api", tag: "v1.2.1"'
+    assert_includes gemfile, 'gem "puma", "8.1.1"'
     assert_includes gemfile, 'gem "msgpack", ">= 1.8.7"'
     assert_includes gemfile, 'gem "net-ssh", ">= 7.3.8"'
     refute_includes gemfile, "recording_studio_internationalization"
@@ -94,22 +96,22 @@ class RecordingStudioGoogleDriveTest < Minitest::Test
     refute_includes gemfile, 'github: "bowerbird-app/RecordingStudio_metrics", tag: "v0.8.0"'
     refute_includes gemfile, 'github: "bowerbird-app/RecordingStudio_metrics", tag: "v0.7.2"'
     refute_includes gemfile, 'github: "bowerbird-app/RecordingStudio_metrics", tag: "v0.6.1"'
-    assert_includes gemfile, 'github: "bowerbird-app/flatpack", tag: "v0.1.376"'
-    assert_includes root_gemfile, 'github: "bowerbird-app/RecordingStudio", tag: "v7.0.0"'
-    assert_includes root_gemfile, 'github: "bowerbird-app/flatpack", tag: "v0.1.376"'
-    assert_includes root_gemfile, 'github: "bowerbird-app/RecordingStudio_Oauth", tag: "v0.22.0"'
-    assert_includes root_gemfile, 'github: "bowerbird-app/RecordingStudio_api", tag: "v0.24.0"'
+    assert_includes gemfile, 'github: "bowerbird-app/flatpack", tag: "v0.1.377"'
+    assert_includes root_gemfile, 'github: "bowerbird-app/RecordingStudio", tag: "v7.3.0"'
+    assert_includes root_gemfile, 'github: "bowerbird-app/flatpack", tag: "v0.1.377"'
+    assert_includes root_gemfile, 'github: "bowerbird-app/RecordingStudio_Oauth", tag: "v0.25.0"'
+    assert_includes root_gemfile, 'github: "bowerbird-app/RecordingStudio_api", tag: "v1.2.1"'
     assert_includes root_gemfile, 'github: "bowerbird-app/RecordingStudio_logs", tag: "v0.8.0"'
     assert_includes root_gemfile, 'github: "bowerbird-app/RecordingStudio_metrics", tag: "v0.9.0"'
-    assert_includes root_gemfile, 'github: "bowerbird-app/RecordingStudio_cache", tag: "v0.6.3"'
-    assert_includes root_gemfile, 'github: "bowerbird-app/RecordingStudio_accessible", tag: "v0.44.0"'
-    assert_includes root_gemfile, 'github: "bowerbird-app/RecordingStudio_trashable", tag: "v0.17.0"'
-    assert_includes root_gemfile, 'github: "bowerbird-app/RecordingStudio_icons", tag: "v0.2.1"'
-    assert_includes root_gemfile, 'github: "bowerbird-app/RecordingStudio_moveable", tag: "v5.0.0"'
-    assert_includes root_gemfile, 'github: "bowerbird-app/RecordingStudio_admin", tag: "v2.16.0"'
+    assert_includes root_gemfile, 'github: "bowerbird-app/RecordingStudio_cache", tag: "v0.7.0"'
+    assert_includes root_gemfile, 'github: "bowerbird-app/RecordingStudio_accessible", tag: "v0.45.1"'
+    assert_includes root_gemfile, 'github: "bowerbird-app/RecordingStudio_trashable", tag: "v1.0.1"'
+    assert_includes root_gemfile, 'github: "bowerbird-app/RecordingStudio_icons", tag: "v0.4.0"'
+    assert_includes root_gemfile, 'github: "bowerbird-app/RecordingStudio_moveable", tag: "v6.0.0"'
+    assert_includes root_gemfile, 'github: "bowerbird-app/RecordingStudio_admin", tag: "v2.18.0"'
     assert_includes root_gemfile, 'github: "bowerbird-app/RecordingStudio_site_settings", tag: "v0.6.0"'
-    assert_includes root_gemfile, 'tag: "v0.28.0"'
-    assert_includes root_gemfile, 'gem "puma", "8.1.0"'
+    assert_includes root_gemfile, 'tag: "v0.31.0"'
+    assert_includes root_gemfile, 'gem "puma", "8.1.1"'
     refute_includes gemfile, "recording_studio/v3.0.0"
     refute_includes gemfile, 'tag: "v4.4.0"'
     refute_includes gemfile, 'tag: "v4.3.0"'
@@ -165,6 +167,14 @@ class RecordingStudioGoogleDriveTest < Minitest::Test
       )
     )
     assert_includes events_migration, "add_column :recording_studio_events, :root_recording_id, :uuid"
+    timeline_migration = File.read(
+      File.expand_path(
+        "dummy/db/migrate/20261116120000_add_recording_studio_events_timeline_index.recording_studio.rb",
+        __dir__
+      )
+    )
+    assert_includes timeline_migration, 'name: "index_rs_events_on_timeline"'
+    assert_includes schema, "index_rs_events_on_timeline"
     assert_includes schema, "index_recording_studio_access_constraints_on_action"
     assert_includes schema, "index_recording_studio_access_rules_on_action"
     constraint_migration = Dir.glob(
@@ -241,15 +251,15 @@ class RecordingStudioGoogleDriveTest < Minitest::Test
       assert_operator Gem::Version.new(specs.fetch("nokogiri")), :>=, Gem::Version.new("1.19.5")
       assert_operator Gem::Version.new(specs.fetch("rails-html-sanitizer")), :>=, Gem::Version.new("1.7.2")
       assert_operator Gem::Version.new(specs.fetch("rack")), :>=, Gem::Version.new("3.2.8")
-      assert_operator Gem::Version.new(specs.fetch("puma")), :>=, Gem::Version.new("8.1.0")
+      assert_operator Gem::Version.new(specs.fetch("puma")), :>=, Gem::Version.new("8.1.1")
     end
 
     root_specs = lockfile_spec_versions(File.expand_path("../Gemfile.lock", __dir__))
     dummy_specs = lockfile_spec_versions(File.expand_path("dummy/Gemfile.lock", __dir__))
     assert_operator Gem::Version.new(root_specs.fetch("addressable")), :>=, Gem::Version.new("2.8.7")
     assert_operator Gem::Version.new(dummy_specs.fetch("msgpack")), :>=, Gem::Version.new("1.8.7")
-    assert_equal "7.0.0", dummy_specs.fetch("recording_studio")
-    assert_equal "0.22.0", dummy_specs.fetch("recording_studio_oauth")
+    assert_equal "7.3.0", dummy_specs.fetch("recording_studio")
+    assert_equal "0.25.0", dummy_specs.fetch("recording_studio_oauth")
   end
 
   def test_dummy_login_layout_keeps_flatpack_assets_without_tight_main_offset
