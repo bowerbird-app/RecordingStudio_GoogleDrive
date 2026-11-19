@@ -9,6 +9,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 ### Changed
 - Dummy and development Gemfiles pin Recording Studio `~> 7.8` (`v7.8.0`), FlatPack `~> 0.2` (`v0.2.0`), Accessible `~> 0.58` (`v0.58.0`), Admin `~> 2.20` (`v2.20.0`), API `~> 1.21` (`v1.21.2`), Attachable `~> 0.34` (`v0.34.0`), Cache `~> 0.8` (`v0.8.0`), Icons `~> 0.5` (`v0.5.0`), Logs `~> 0.9` (`v0.9.0`), Metrics `~> 0.10` (`v0.10.0`), Moveable `~> 6.1` (`v6.1.0`), Oauth `~> 0.26` (`v0.26.0`), Site Settings `~> 0.7` (`v0.7.0`), Trashable `~> 1.3` (`v1.3.0`), and Root Switchable `~> 0.17` (`v0.17.0`).
 - Gemspec runtime floors stay `recording_studio >= 7.0, < 8.0` and `recording_studio_oauth >= 0.22.0, < 1.0`. FlatPack stays a development and test pin.
+- This release also ships the untagged main commit from #15 (nicgranleese's dev-pin refresh: its initializer, migration `20261116120000`, and host test).
 
 ### Upgrade notes
 - Hosts MUST run the Recording Studio 7.4, 7.5 and 7.7 migrations if they have not.
