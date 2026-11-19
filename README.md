@@ -4,7 +4,7 @@ This gem talks to the Google Drive API for Recording Studio. It lists and search
 
 ## Setup
 
-1. Add the gem and pin Oauth `v0.25.0`.
+1. Add the gem and pin Oauth `~> 0.26` (`v0.26.0`).
 2. Run `bin/rails generate recording_studio_google_drive:install`.
 3. Install and migrate Recording Studio Oauth (`recording_studio_oauth:install` and `recording_studio_oauth:migrations`).
 4. Register Google Drive from the host initializer. The gem does not register itself.
@@ -91,7 +91,7 @@ Default page size is 25. Dummy and tests point authorize, token, and revoke URLs
 
 This gem owns Google Drive import for Recording Studio Attachable. Attachable stays provider-neutral. This gem does not depend on Attachable. The add-on loads only when `RecordingStudioAttachable` `>= 0.21.0` is present (`ActiveSupport.on_load(:recording_studio_attachable)`). Dummy and CI pin Attachable in the Gemfile.
 
-1. Optionally add `recording_studio_attachable` `>= 0.21.0, < 1.0`. Dummy and CI pin Attachable to tag `v0.31.0`.
+1. Optionally add `recording_studio_attachable` `>= 0.21.0, < 1.0`. Dummy and CI pin Attachable to `~> 0.34` (`v0.34.0`).
 2. Enable Attachable on the recordable types that should accept files.
 3. Mount Attachable. This gem registers adapter routes at `/google_drive` (`as: :google_drive`), so host URLs and route helpers stay the same as Attachable's old in-tree Drive.
 4. Pin importmap modules `recording_studio_attachable/provider_launchers` and `recording_studio_google_drive/google_drive_picker_launcher`.
@@ -129,7 +129,7 @@ After seed, open `/recording_studio_attachable/recordings/<page-recording-id>/at
 
 ## Development
 
-Ruby 3.3.12. Rails 8.1. The gemspec requires Recording Studio `>= 7.0, < 8.0` (dummy GitHub tag `v7.3.0`). Oauth `>= 0.22.0, < 1.0` (dummy GitHub tag `v0.25.0`). Attachable is optional (`>= 0.21.0, < 1.0`; dummy and CI pin tag `v0.31.0`). Dummy and CI also pin Flatpack `v0.1.377`, Accessible `v0.45.1`, Admin `v2.18.0`, API `v1.2.1`, Logs `v0.8.0`, Metrics `v0.9.0`, Cache `v0.7.0`, Icons `v0.4.0`, Moveable `v6.0.0`, Trashable `v1.0.1`, Site Settings `v0.6.0`, and Root Switchable `v0.16.0`.
+Ruby 3.3.12. Rails 8.1. The gemspec requires Recording Studio `>= 7.0, < 8.0` (dummy GitHub tag `v7.8.0`, `~> 7.8`). Oauth `>= 0.22.0, < 1.0` (dummy GitHub tag `v0.26.0`, `~> 0.26`). Attachable is optional (`>= 0.21.0, < 1.0`; dummy and CI pin `~> 0.34`, tag `v0.34.0`). Dummy and CI also pin Flatpack `~> 0.2` (`v0.2.0`), Accessible `~> 0.58` (`v0.58.0`), Admin `~> 2.20` (`v2.20.0`), API `~> 1.21` (`v1.21.2`), Logs `~> 0.9` (`v0.9.0`), Metrics `~> 0.10` (`v0.10.0`), Cache `~> 0.8` (`v0.8.0`), Icons `~> 0.5` (`v0.5.0`), Moveable `~> 6.1` (`v6.1.0`), Trashable `~> 1.3` (`v1.3.0`), Site Settings `~> 0.7` (`v0.7.0`), and Root Switchable `~> 0.17` (`v0.17.0`).
 
 ```bash
 bundle install

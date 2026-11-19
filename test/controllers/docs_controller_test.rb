@@ -27,7 +27,9 @@ class DocsControllerTest < ActionDispatch::IntegrationTest
     assert_select "h1", text: "Install"
     assert_includes response.body, "Add the gems"
     assert_includes response.body, "recording_studio_oauth"
-    assert_includes response.body, "v0.25.0"
+    assert_includes response.body, "~&gt; 0.26"
+    assert_includes response.body, "github: &quot;bowerbird-app/RecordingStudio_Oauth&quot;"
+    assert_includes response.body, "tag: &quot;v0.26.0&quot;"
   end
 
   test "config page renders successfully" do
